@@ -20,9 +20,13 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("market");
 
-  const fetchMarketStatus = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchMarketStatus = async (silent = false) => {
+    // A silent refresh (the periodic auto-update) must not blank the page with
+    // the loading/error screen — it only swaps in fresh data when it arrives.
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       const response = await fetch("/api/market-status");
       if (!response.ok) throw new Error(`Server responded with ${response.status}`);
@@ -30,14 +34,19 @@ export default function App() {
       setMarketData(data);
     } catch (e) {
       console.error("Failed to load market data", e);
-      setError("טעינת נתוני השוק נכשלה. ודא שהשרת פעיל ונסה שוב.");
+      if (!silent) setError("טעינת נתוני השוק נכשלה. ודא שהשרת פעיל ונסה שוב.");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchMarketStatus();
+    // Auto-refresh every 60s so the displayed market stays current (and rolls
+    // over to a new active market once the current one resolves) without a
+    // manual page reload.
+    const intervalId = setInterval(() => fetchMarketStatus(true), 60000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleWeightOptimize = (optimizedWeights: EnsembleWeights) => {
