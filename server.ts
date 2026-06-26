@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import { 
   BitcoinDataPoint, 
@@ -1482,6 +1481,9 @@ app.post("/api/generate-report", async (req, res) => {
 // ==========================================
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    // Dynamic import keeps vite (a devDependency) out of the production /
+    // serverless bundle — it is only needed for local development.
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -1500,4 +1502,10 @@ async function startServer() {
   });
 }
 
-startServer();
+// On Vercel the Express app is exported and served as a serverless function
+// (see api/[...path].ts); the standalone listener only runs locally.
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
