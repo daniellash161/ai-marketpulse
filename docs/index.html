@@ -3,109 +3,116 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AI MarketPulse — מערכת מחקרית לניתוח שוק הביטקוין</title>
+<title>AI MarketPulse · מערכת מחקרית לניתוח שוק הביטקוין</title>
 <meta name="description" content="דאשבורד מחקרי אקדמי לניתוח כיוון מחיר הביטקוין: נתונים אמיתיים, אינדיקטורים טכניים, מודלי למידת מכונה, השוואה ל-Polymarket ו-Backtesting. אינו ייעוץ פיננסי." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0a0e1a; --bg2:#0e1424; --panel:#121a2e; --panel2:#0f1626;
-    --border:#1e293f; --text:#e8edf7; --muted:#93a1bd;
-    --amber:#f5a623; --amber2:#ffbe4d; --green:#34d399; --red:#f87171;
+    --bg:#0b0f19; --panel:#111726; --panel2:#0d1320;
+    --border:rgba(255,255,255,.07); --border-strong:rgba(217,164,65,.35);
+    --text:#eef1f7; --muted:#98a2b6; --faint:#6b7690;
+    --gold:#d9a441; --gold-soft:#e8c07d; --gold-glow:rgba(217,164,65,.16);
+    --serif:"Frank Ruhl Libre",Georgia,serif;
+    --sans:"Heebo","Segoe UI",system-ui,Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{
-    background:
-      radial-gradient(1100px 500px at 85% -10%, rgba(245,166,35,.10), transparent 60%),
-      radial-gradient(900px 500px at 0% 0%, rgba(52,211,153,.06), transparent 55%),
+  html{scroll-behavior:smooth}
+  body{margin:0;background:
+      radial-gradient(1200px 620px at 82% -12%, var(--gold-glow), transparent 62%),
+      radial-gradient(900px 560px at -5% 4%, rgba(90,120,180,.07), transparent 58%),
       var(--bg);
-    color:var(--text);
-    font-family:"Heebo","Segoe UI",Arial,system-ui,sans-serif;
-    line-height:1.65; -webkit-font-smoothing:antialiased;
-  }
+    color:var(--text);font-family:var(--sans);line-height:1.7;font-weight:400;
+    -webkit-font-smoothing:antialiased;letter-spacing:.1px}
   a{color:inherit;text-decoration:none}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 26px}
+
+  /* entrance */
+  .rise{opacity:0;transform:translateY(16px);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+  .d1{animation-delay:.05s}.d2{animation-delay:.15s}.d3{animation-delay:.25s}.d4{animation-delay:.35s}
+  @keyframes rise{to{opacity:1;transform:none}}
 
   /* nav */
-  header{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);
-    background:rgba(10,14,26,.72);border-bottom:1px solid var(--border)}
-  nav{display:flex;align-items:center;justify-content:space-between;height:64px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px}
-  .logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
-    background:linear-gradient(160deg,var(--amber2),var(--amber));color:#1a1300;
-    font-weight:900;box-shadow:0 6px 18px rgba(245,166,35,.35)}
-  .ver{font-size:11px;color:var(--muted);border:1px solid var(--border);
-    padding:2px 8px;border-radius:999px;margin-inline-start:4px}
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:11px;
-    font-weight:700;font-size:14px;transition:.15s;border:1px solid transparent;cursor:pointer}
-  .btn-primary{background:linear-gradient(160deg,var(--amber2),var(--amber));color:#1a1300;
-    box-shadow:0 8px 22px rgba(245,166,35,.28)}
-  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(245,166,35,.4)}
+  header{position:sticky;top:0;z-index:20;backdrop-filter:blur(12px);
+    background:rgba(11,15,25,.66);border-bottom:1px solid var(--border)}
+  nav{display:flex;align-items:center;justify-content:space-between;height:70px}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:19px;letter-spacing:.2px}
+  .logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+    background:linear-gradient(150deg,var(--gold-soft),var(--gold));color:#221700;
+    font-weight:900;font-size:19px;box-shadow:0 8px 24px var(--gold-glow)}
+  .ver{font-size:11px;color:var(--muted);border:1px solid var(--border);padding:3px 9px;
+    border-radius:999px;letter-spacing:1px;font-weight:500}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:12px;
+    font-weight:600;font-size:14px;transition:.2s ease;border:1px solid transparent;cursor:pointer;font-family:var(--sans)}
+  .btn-primary{background:linear-gradient(150deg,var(--gold-soft),var(--gold));color:#221700;
+    box-shadow:0 10px 26px var(--gold-glow)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(217,164,65,.34)}
   .btn-ghost{border-color:var(--border);color:var(--text);background:rgba(255,255,255,.02)}
-  .btn-ghost:hover{border-color:var(--amber);color:var(--amber2)}
+  .btn-ghost:hover{border-color:var(--border-strong);color:var(--gold-soft)}
 
   /* hero */
-  .hero{padding:74px 0 34px;text-align:center}
-  .pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--amber2);
-    background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.28);
-    padding:6px 14px;border-radius:999px;margin-bottom:22px}
-  .hero h1{font-size:clamp(30px,5.4vw,52px);line-height:1.12;margin:0 0 16px;font-weight:900;
-    letter-spacing:-.5px}
-  .hero h1 .accent{background:linear-gradient(120deg,var(--amber2),var(--amber));
+  .hero{padding:96px 0 46px;text-align:center}
+  .kicker{display:inline-flex;align-items:center;gap:9px;font-size:12px;color:var(--gold-soft);
+    background:rgba(217,164,65,.07);border:1px solid rgba(217,164,65,.24);padding:7px 16px;
+    border-radius:999px;margin-bottom:30px;letter-spacing:2px;font-weight:500}
+  .kicker .spark{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+  .hero h1{font-family:var(--serif);font-weight:900;font-size:clamp(34px,6vw,60px);line-height:1.15;
+    margin:0 0 22px;letter-spacing:-.4px}
+  .hero h1 .accent{background:linear-gradient(115deg,var(--gold-soft),var(--gold));
     -webkit-background-clip:text;background-clip:text;color:transparent}
-  .lead{font-size:clamp(15px,2.2vw,19px);color:var(--muted);max-width:680px;margin:0 auto 30px}
-  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .lead{font-size:clamp(15px,2vw,18.5px);color:var(--muted);max-width:660px;margin:0 auto 34px;font-weight:300}
+  .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+  .divider{width:70px;height:1px;margin:60px auto 0;background:linear-gradient(90deg,transparent,var(--border-strong),transparent)}
 
   /* disclaimer */
-  .disclaimer{max-width:900px;margin:34px auto 0;display:flex;gap:12px;align-items:flex-start;
-    background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.28);
-    border-radius:14px;padding:14px 18px;color:#f6c9c9;font-size:13.5px;text-align:right}
-  .disclaimer b{color:#ffb4b4}
+  .disclaimer{max-width:860px;margin:40px auto 0;display:flex;gap:14px;align-items:flex-start;
+    background:rgba(255,255,255,.02);border:1px solid var(--border);border-inline-start:3px solid var(--gold);
+    border-radius:14px;padding:16px 20px;color:var(--muted);font-size:13.5px;text-align:right;font-weight:300}
+  .disclaimer b{color:var(--gold-soft);font-weight:600}
 
   /* section */
-  section{padding:56px 0}
-  .eyebrow{color:var(--amber2);font-weight:700;font-size:13px;letter-spacing:.5px;text-align:center}
-  .h2{font-size:clamp(24px,3.6vw,34px);font-weight:800;text-align:center;margin:8px 0 8px}
-  .sub{color:var(--muted);text-align:center;max-width:640px;margin:0 auto 40px}
+  section{padding:64px 0}
+  .eyebrow{color:var(--gold-soft);font-weight:600;font-size:12px;letter-spacing:3px;text-align:center;text-transform:uppercase}
+  .h2{font-family:var(--serif);font-size:clamp(26px,4vw,38px);font-weight:700;text-align:center;margin:12px 0 10px;letter-spacing:-.2px}
+  .sub{color:var(--muted);text-align:center;max-width:600px;margin:0 auto 46px;font-weight:300}
 
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
   @media(max-width:820px){.grid{grid-template-columns:1fr 1fr}}
   @media(max-width:560px){.grid{grid-template-columns:1fr}}
-  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));
-    border:1px solid var(--border);border-radius:16px;padding:22px;transition:.18s}
-  .card:hover{border-color:rgba(245,166,35,.45);transform:translateY(-3px);
-    box-shadow:0 16px 40px rgba(0,0,0,.35)}
-  .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;
-    background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.25);margin-bottom:14px}
-  .card h3{margin:0 0 6px;font-size:17px;font-weight:800}
-  .card p{margin:0;color:var(--muted);font-size:14px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);
+    border-radius:18px;padding:26px;transition:.25s ease}
+  .card:hover{border-color:var(--border-strong);transform:translateY(-4px);box-shadow:0 22px 50px rgba(0,0,0,.4)}
+  .ico{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-size:22px;
+    background:rgba(217,164,65,.10);border:1px solid rgba(217,164,65,.22);margin-bottom:16px}
+  .card h3{margin:0 0 8px;font-size:17px;font-weight:700}
+  .card p{margin:0;color:var(--muted);font-size:14px;font-weight:300;line-height:1.65}
 
   /* stats */
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:8px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
   @media(max-width:640px){.stats{grid-template-columns:1fr 1fr}}
-  .stat{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;
-    padding:20px;text-align:center}
-  .stat .num{font-size:26px;font-weight:900;color:var(--amber2)}
-  .stat .lbl{color:var(--muted);font-size:13px;margin-top:2px}
+  .stat{text-align:center;padding:24px 14px;border:1px solid var(--border);border-radius:16px;background:rgba(255,255,255,.015)}
+  .stat .num{font-family:var(--serif);font-size:30px;font-weight:700;color:var(--gold-soft)}
+  .stat .lbl{color:var(--muted);font-size:13px;margin-top:4px;font-weight:300}
 
   /* tech */
-  .tech{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:8px}
+  .tech{display:flex;flex-wrap:wrap;gap:11px;justify-content:center}
   .tag{border:1px solid var(--border);background:rgba(255,255,255,.02);color:var(--text);
-    padding:8px 15px;border-radius:999px;font-size:13.5px;font-weight:600}
-  .tag:hover{border-color:var(--amber);color:var(--amber2)}
+    padding:9px 17px;border-radius:999px;font-size:13.5px;font-weight:500;transition:.2s}
+  .tag:hover{border-color:var(--border-strong);color:var(--gold-soft)}
 
-  /* run box */
-  .runbox{max-width:720px;margin:26px auto 0;background:#070b14;border:1px solid var(--border);
-    border-radius:14px;overflow:hidden;text-align:left;direction:ltr}
-  .runbar{display:flex;gap:7px;padding:12px 16px;border-bottom:1px solid var(--border);background:#0b1120}
+  /* run */
+  .runbox{max-width:700px;margin:34px auto 0;background:#070b13;border:1px solid var(--border);
+    border-radius:16px;overflow:hidden;text-align:left;direction:ltr}
+  .runbar{display:flex;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border);background:#0a0f1b}
   .dot{width:11px;height:11px;border-radius:50%}
-  .runbox pre{margin:0;padding:18px;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13.5px;
-    color:#cfe0ff;overflow-x:auto}
-  .runbox .c{color:#5f7599}
-  .runbox .g{color:var(--green)}
+  .runbox pre{margin:0;padding:20px;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13.5px;color:#cfe0ff;overflow-x:auto;line-height:1.9}
+  .runbox .c{color:#5f7599}.runbox .g{color:#8fd3a6}
 
-  footer{border-top:1px solid var(--border);padding:30px 0;color:var(--muted);
-    text-align:center;font-size:13px}
-  footer a{color:var(--amber2)}
+  footer{border-top:1px solid var(--border);padding:34px 0;color:var(--muted);text-align:center;font-size:13px;font-weight:300}
+  footer a{color:var(--gold-soft)}
+  .sep{color:var(--border-strong);margin:0 10px}
 </style>
 </head>
 <body>
@@ -113,8 +120,8 @@
 <header>
   <div class="wrap">
     <nav>
-      <div class="brand"><span class="logo">B</span> AI MarketPulse <span class="ver">v1.4</span></div>
-      <a class="btn btn-ghost" href="https://github.com/daniellash161/ai-marketpulse" target="_blank" rel="noopener">⭐ צפייה ב-GitHub</a>
+      <div class="brand"><span class="logo">B</span> AI MarketPulse <span class="ver">V1.4</span></div>
+      <a class="btn btn-ghost" href="https://github.com/daniellash161/ai-marketpulse" target="_blank" rel="noopener">צפייה ב־GitHub</a>
     </nav>
   </div>
 </header>
@@ -123,62 +130,66 @@
 
   <!-- HERO -->
   <div class="hero">
-    <span class="pill">● פרויקט אקדמי–מחקרי · Bitcoin Analytics</span>
-    <h1>מבינים את שוק הביטקוין<br><span class="accent">בעזרת נתונים, לא תחושת בטן</span></h1>
-    <p class="lead">
-      AI MarketPulse הוא דאשבורד מחקרי בעברית שמרכז במקום אחד נתוני שוק אמיתיים,
-      אינדיקטורים טכניים, מודלי למידת מכונה והשוואה לשוק ניבויים — ומציג תמונת מצב שקופה
-      לגבי כיוון מחיר הביטקוין, כולל מגבלות המודלים.
+    <span class="kicker rise d1"><span class="spark"></span> פרויקט אקדמי מחקרי · BITCOIN ANALYTICS</span>
+    <h1 class="rise d2">מבינים את שוק הביטקוין<br><span class="accent">בעזרת נתונים, לא תחושת בטן</span></h1>
+    <p class="lead rise d3">
+      AI MarketPulse הוא דאשבורד מחקרי בעברית שמרכז במקום אחד נתוני שוק אמיתיים, אינדיקטורים
+      טכניים, מודלי למידת מכונה והשוואה לשוק ניבויים, ומציג תמונת מצב שקופה לגבי כיוון מחיר
+      הביטקוין, לרבות מגבלות המודלים.
     </p>
-    <div class="cta">
-      <a class="btn btn-primary" href="https://github.com/daniellash161/ai-marketpulse" target="_blank" rel="noopener">קוד המקור ←</a>
+    <div class="cta rise d4">
+      <a class="btn btn-primary" href="https://github.com/daniellash161/ai-marketpulse" target="_blank" rel="noopener">לקוד המקור</a>
       <a class="btn btn-ghost" href="#features">מה המערכת מציגה</a>
     </div>
 
-    <div class="disclaimer">
-      <span style="font-size:18px">⚠️</span>
-      <div><b>הבהרה אקדמית:</b> הפרויקט הוא מחקרי ולימודי בלבד. המערכת אינה ייעוץ פיננסי,
-      אינה המלצת השקעה ואינה מבצעת מסחר, חיבור לארנק או העברת כספים. הנתונים מוצגים לצורכי
-      מחקר בלבד ואין הבטחה לדיוק או לביצועים עתידיים.</div>
+    <div class="disclaimer rise d4">
+      <span style="font-size:17px">✳️</span>
+      <div><b>הבהרה אקדמית.</b> הפרויקט מחקרי ולימודי בלבד. המערכת אינה ייעוץ פיננסי, אינה
+      המלצת השקעה ואינה מבצעת מסחר, חיבור לארנק או העברת כספים. הנתונים מוצגים לצורכי מחקר
+      בלבד, ואין הבטחה לדיוק או לביצועים עתידיים.</div>
     </div>
   </div>
+
+  <div class="divider"></div>
 
   <!-- FEATURES -->
   <section id="features">
     <div class="eyebrow">יכולות המערכת</div>
     <div class="h2">הכל בדאשבורד אחד</div>
-    <p class="sub">שכבת נתונים אמיתית, מנוע אינדיקטורים, מודלים והערכת ביצועים — עם ממשק עברי נגיש.</p>
+    <p class="sub">שכבת נתונים אמיתית, מנוע אינדיקטורים, מודלים והערכת ביצועים, בממשק עברי נגיש.</p>
     <div class="grid">
       <div class="card"><div class="ico">📊</div><h3>נתוני שוק אמיתיים</h3>
-        <p>נרות יומיים של BTC/USDT מ-Binance משנת 2020, מדד פחד וחמדנות, נפח ותזרים קונים — הכל לקריאה בלבד.</p></div>
+        <p>נרות יומיים של BTC/USDT מ־Binance משנת 2020, מדד פחד וחמדנות, נפח ותזרים קונים. הכל לקריאה בלבד.</p></div>
       <div class="card"><div class="ico">🤖</div><h3>מודלי למידת מכונה</h3>
-        <p>Prophet, ARIMA, XGBoost ו-RNN/LSTM לצד מודל אנסמבל משוקלל, עם השוואה כנה מול baseline.</p></div>
-      <div class="card"><div class="ico">🎯</div><h3>השוואה ל-Polymarket</h3>
-        <p>הסתברות מרומזת חיה משוק ניבויים אמיתי, ספר פקודות והפער מול תחזית המודל.</p></div>
+        <p>Prophet, ARIMA, XGBoost ו־RNN/LSTM לצד מודל אנסמבל משוקלל, עם השוואה כנה מול baseline.</p></div>
+      <div class="card"><div class="ico">🎯</div><h3>השוואה ל־Polymarket</h3>
+        <p>הסתברות מרומזת חיה משוק ניבויים אמיתי, ספר פקודות, והפער מול תחזית המודל.</p></div>
       <div class="card"><div class="ico">🧪</div><h3>Backtesting היסטורי</h3>
-        <p>סימולציה על נתוני עבר אמיתיים והשוואת אסטרטגיה מול Buy &amp; Hold ו-DCA.</p></div>
-      <div class="card"><div class="ico">📈</div><h3>תחזית ל-30 יום</h3>
-        <p>הקרנה קדימה לכל מודל כולל רצועת אי-ודאות, ומדדי דיוק מתגלגלים לאורך זמן.</p></div>
+        <p>סימולציה על נתוני עבר אמיתיים והשוואת אסטרטגיה מול Buy &amp; Hold ו־DCA.</p></div>
+      <div class="card"><div class="ico">📈</div><h3>תחזית ל־30 יום</h3>
+        <p>הקרנה קדימה לכל מודל כולל רצועת אי ודאות, ומדדי דיוק מתגלגלים לאורך זמן.</p></div>
       <div class="card"><div class="ico">🇮🇱</div><h3>דאשבורד בעברית</h3>
-        <p>ממשק RTL נגיש עם גרפים, הסברים ודוח מחקרי אוטומטי להורדה.</p></div>
+        <p>ממשק RTL נגיש עם גרפים, הסברים, ודוח מחקרי אוטומטי להורדה.</p></div>
     </div>
   </section>
 
   <!-- STATS -->
   <section style="padding-top:0">
     <div class="stats">
-      <div class="stat"><div class="num">2020→</div><div class="lbl">היסטוריית נתונים</div></div>
-      <div class="stat"><div class="num">6</div><div class="lbl">מודלים + אנסמבל</div></div>
+      <div class="stat"><div class="num">2020</div><div class="lbl">היסטוריית נתונים ואילך</div></div>
+      <div class="stat"><div class="num">6</div><div class="lbl">מודלים ואנסמבל</div></div>
       <div class="stat"><div class="num">3</div><div class="lbl">מקורות נתונים חיים</div></div>
       <div class="stat"><div class="num">RTL</div><div class="lbl">ממשק עברי מלא</div></div>
     </div>
   </section>
 
+  <div class="divider"></div>
+
   <!-- TECH -->
   <section>
     <div class="eyebrow">מאחורי הקלעים</div>
     <div class="h2">סטאק טכנולוגי</div>
-    <p class="sub">קליינט מודרני מבוסס React, שרת Express שמושך נתונים אמיתיים ומחשב הכל בצד-שרת.</p>
+    <p class="sub">קליינט מודרני מבוסס React, ושרת Express שמושך נתונים אמיתיים ומחשב הכל בצד השרת.</p>
     <div class="tech">
       <span class="tag">React 19</span><span class="tag">TypeScript</span><span class="tag">Vite</span>
       <span class="tag">Tailwind CSS</span><span class="tag">Recharts</span><span class="tag">Express</span>
@@ -187,11 +198,11 @@
 
     <div class="runbox">
       <div class="runbar"><span class="dot" style="background:#ff5f56"></span><span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#27c93f"></span></div>
-      <pre><span class="c"># הרצה מקומית — לא נדרש מפתח API</span>
+      <pre><span class="c"># הרצה מקומית, ללא צורך במפתח API</span>
 git clone https://github.com/daniellash161/ai-marketpulse
 cd ai-marketpulse
 npm install
-npm run dev   <span class="g"># → http://localhost:3000</span></pre>
+npm run dev   <span class="g"># http://localhost:3000</span></pre>
     </div>
   </section>
 
@@ -199,7 +210,7 @@ npm run dev   <span class="g"># → http://localhost:3000</span></pre>
 
 <footer>
   <div class="wrap">
-    AI MarketPulse — פרויקט אקדמי מחקרי · מחקר בלבד, אינו ייעוץ פיננסי ·
+    AI MarketPulse <span class="sep">·</span> פרויקט אקדמי מחקרי <span class="sep">·</span> מחקר בלבד, אינו ייעוץ פיננסי <span class="sep">·</span>
     <a href="https://github.com/daniellash161/ai-marketpulse" target="_blank" rel="noopener">GitHub</a>
   </div>
 </footer>
