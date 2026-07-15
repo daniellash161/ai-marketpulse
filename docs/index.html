@@ -89,6 +89,18 @@
   .card h3{margin:0 0 8px;font-size:17px;font-weight:700}
   .card p{margin:0;color:var(--muted);font-size:14px;font-weight:300;line-height:1.65}
 
+  /* media */
+  .media-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){.media-grid{grid-template-columns:1fr}}
+  .media-card{display:flex;gap:18px;align-items:flex-start;background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--border);border-radius:18px;padding:26px;transition:.25s ease}
+  .media-card:hover{border-color:var(--border-strong);transform:translateY(-4px);box-shadow:0 22px 50px rgba(0,0,0,.4)}
+  .media-ico{flex:none;width:56px;height:56px;border-radius:15px;display:grid;place-items:center;font-size:27px;
+    background:rgba(217,164,65,.10);border:1px solid rgba(217,164,65,.22)}
+  .media-card h3{margin:0 0 6px;font-size:18px;font-weight:700}
+  .media-card p{margin:0 0 10px;color:var(--muted);font-size:14px;font-weight:300}
+  .media-link{color:var(--gold-soft);font-weight:600;font-size:14px}
+
   /* stats */
   .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
   @media(max-width:640px){.stats{grid-template-columns:1fr 1fr}}
@@ -149,6 +161,33 @@
       בלבד, ואין הבטחה לדיוק או לביצועים עתידיים.</div>
     </div>
   </div>
+
+  <div class="divider"></div>
+
+  <!-- MEDIA -->
+  <section id="media">
+    <div class="eyebrow">צפו במוצר</div>
+    <div class="h2">סרטון ומצגת</div>
+    <p class="sub">סיור קצר במוצר, והמצגת המלאה של הפרויקט.</p>
+    <div class="media-grid">
+      <a class="media-card rise d1" href="https://canva.link/8pn6vyvj355vxzx" target="_blank" rel="noopener">
+        <div class="media-ico">🎬</div>
+        <div>
+          <h3>סרטון המוצר</h3>
+          <p>הצצה קולנועית קצרה ל־AI MarketPulse ולערך שהוא נותן.</p>
+          <span class="media-link">לצפייה בסרטון ›</span>
+        </div>
+      </a>
+      <a class="media-card rise d2" href="https://canva.link/xtrq5fxruz7mf9v" target="_blank" rel="noopener">
+        <div class="media-ico">📊</div>
+        <div>
+          <h3>מצגת הפרויקט</h3>
+          <p>הרקע, הארכיטקטורה, המודלים והמסקנות, במצגת מלאה.</p>
+          <span class="media-link">לצפייה במצגת ›</span>
+        </div>
+      </a>
+    </div>
+  </section>
 
   <div class="divider"></div>
 
