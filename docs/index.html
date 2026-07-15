@@ -52,7 +52,7 @@
   .btn-ghost:hover{border-color:var(--border-strong);color:var(--gold-soft)}
 
   /* hero */
-  .hero{padding:96px 0 46px;text-align:center}
+  .hero{padding:88px 0 22px;text-align:center}
   .kicker{display:inline-flex;align-items:center;gap:9px;font-size:12px;color:var(--gold-soft);
     background:rgba(217,164,65,.07);border:1px solid rgba(217,164,65,.24);padding:7px 16px;
     border-radius:999px;margin-bottom:30px;letter-spacing:2px;font-weight:500}
@@ -63,8 +63,11 @@
     -webkit-background-clip:text;background-clip:text;color:transparent}
   .lead{font-size:clamp(15px,2vw,18.5px);color:var(--muted);max-width:660px;margin:0 auto 34px;font-weight:300}
   .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .team{margin:24px auto 0;color:var(--muted);font-size:13.5px;font-weight:300;letter-spacing:.3px}
+  .team .lbl{color:var(--gold-soft);font-weight:600}
+  .team .nm{color:var(--text)}
 
-  .divider{width:70px;height:1px;margin:60px auto 0;background:linear-gradient(90deg,transparent,var(--border-strong),transparent)}
+  .divider{width:70px;height:1px;margin:36px auto 0;background:linear-gradient(90deg,transparent,var(--border-strong),transparent)}
 
   /* disclaimer */
   .disclaimer{max-width:860px;margin:40px auto 0;display:flex;gap:14px;align-items:flex-start;
@@ -73,7 +76,7 @@
   .disclaimer b{color:var(--gold-soft);font-weight:600}
 
   /* section */
-  section{padding:64px 0}
+  section{padding:52px 0}
   .eyebrow{color:var(--gold-soft);font-weight:600;font-size:12px;letter-spacing:3px;text-align:center;text-transform:uppercase}
   .h2{font-family:var(--serif);font-size:clamp(26px,4vw,38px);font-weight:700;text-align:center;margin:12px 0 10px;letter-spacing:-.2px}
   .sub{color:var(--muted);text-align:center;max-width:600px;margin:0 auto 46px;font-weight:300}
@@ -153,6 +156,8 @@
       <a class="btn btn-primary" href="https://github.com/daniellash161/ai-marketpulse" target="_blank" rel="noopener">לקוד המקור</a>
       <a class="btn btn-ghost" href="#features">מה המערכת מציגה</a>
     </div>
+
+    <p class="team rise d4"><span class="lbl">צוות הפרויקט</span> &nbsp;·&nbsp; <span class="nm">דניאלה שמש</span> &nbsp;·&nbsp; <span class="nm">שחר קוזניאק</span> &nbsp;·&nbsp; <span class="nm">יונתן חגי</span></p>
 
     <div class="disclaimer rise d4">
       <span style="font-size:17px">✳️</span>
@@ -249,6 +254,7 @@ npm run dev   <span class="g"># http://localhost:3000</span></pre>
 
 <footer>
   <div class="wrap">
+    <div style="margin-bottom:8px">צוות הפרויקט: דניאלה שמש <span class="sep">·</span> שחר קוזניאק <span class="sep">·</span> יונתן חגי</div>
     AI MarketPulse <span class="sep">·</span> פרויקט אקדמי מחקרי <span class="sep">·</span> מחקר בלבד, אינו ייעוץ פיננסי <span class="sep">·</span>
     <a href="https://github.com/daniellash161/ai-marketpulse" target="_blank" rel="noopener">GitHub</a>
   </div>
