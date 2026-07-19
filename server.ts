@@ -12,7 +12,10 @@ import {
   OrderBookLevel,
   MetaModelStats,
   MetaModelEpoch,
-  ForecastPoint
+  ForecastPoint,
+  ModelTuning,
+  FeatureAblationEntry,
+  FeatureAblationReport
 } from "./src/types";
 
 dotenv.config();
@@ -188,13 +191,22 @@ class DecisionNode {
   rightValue: number = 0;  // additive log-odds contribution when value > threshold
 }
 
-function trainDecisionTree(data: BitcoinDataPoint[]): {
+interface TreeTrainOptions {
+  horizon?: number;        // label = price higher `horizon` days later (default 7)
+  rounds?: number;         // number of boosted stumps
+  learningRate?: number;   // shrinkage per stump
+  featureSubset?: string[];// train on a subset of features (for ablation)
+}
+
+function trainDecisionTree(data: BitcoinDataPoint[], opts: TreeTrainOptions = {}): {
   predict: (point: BitcoinDataPoint) => number;
   importance: { [key: string]: number };
 } {
-  // Classify whether the price will be higher 7 days later.
+  // Classify whether the price will be higher `horizon` days later.
   // Features: rsi, fearGreed, price_vs_ma50, polymarketProb, ibitFlow
-  const features = ["rsi", "fearGreed", "maDiff", "polymarketProb", "ibitFlow"];
+  const allFeatures = ["rsi", "fearGreed", "maDiff", "polymarketProb", "ibitFlow"];
+  const features = opts.featureSubset ?? allFeatures;
+  const horizon = opts.horizon ?? 7;
 
   // Feature extraction helper
   const getFeatureVal = (p: BitcoinDataPoint, feat: string) => {
@@ -206,11 +218,11 @@ function trainDecisionTree(data: BitcoinDataPoint[]): {
     return 0;
   };
 
-  // Labelled samples: did price go UP 7 days later?
+  // Labelled samples: did price go UP `horizon` days later?
   const samples: { x: { [key: string]: number }; y: number }[] = [];
-  for (let i = 0; i < data.length - 7; i++) {
+  for (let i = 0; i < data.length - horizon; i++) {
     const current = data[i];
-    const y = data[i + 7].price > current.price ? 1 : 0;
+    const y = data[i + horizon].price > current.price ? 1 : 0;
     const x: { [key: string]: number } = {};
     for (const f of features) x[f] = getFeatureVal(current, f);
     samples.push({ x, y });
@@ -236,8 +248,8 @@ function trainDecisionTree(data: BitcoinDataPoint[]): {
   const importance: { [key: string]: number } = {};
   for (const f of features) importance[f] = 0;
 
-  const rounds = 25;
-  const learningRate = 0.2;
+  const rounds = opts.rounds ?? 25;
+  const learningRate = opts.learningRate ?? 0.2;
 
   for (let r = 0; r < rounds; r++) {
     // Pseudo-residuals = negative gradient of the logistic loss = y - p
@@ -290,16 +302,143 @@ function trainDecisionTree(data: BitcoinDataPoint[]): {
   return { predict, importance };
 }
 
+// ==========================================
+// 3b. HYPERPARAMETER TUNING & FEATURE ABLATION
+// (honest chronological validation split inside the training window, no test-set leakage)
+// ==========================================
+
+function treeValidationAccuracy(
+  model: { predict: (p: BitcoinDataPoint) => number },
+  valSet: BitcoinDataPoint[],
+  horizon: number
+): number {
+  let correct = 0, total = 0;
+  for (let i = 0; i < valSet.length - horizon; i++) {
+    const pred = model.predict(valSet[i]) > 0.5 ? 1 : 0;
+    const actual = valSet[i + horizon].price > valSet[i].price ? 1 : 0;
+    if (pred === actual) correct++;
+    total++;
+  }
+  return total ? correct / total : 0;
+}
+
+// Brier score of the PROBABILISTIC prediction (mean squared error vs the 0/1 outcome).
+// Lower is better. Unlike thresholded accuracy it is sensitive to probability quality,
+// so it is used as the tuning / ablation selection criterion.
+function treeValidationBrier(
+  model: { predict: (p: BitcoinDataPoint) => number },
+  valSet: BitcoinDataPoint[],
+  horizon: number
+): number {
+  let sum = 0, total = 0;
+  for (let i = 0; i < valSet.length - horizon; i++) {
+    const p = model.predict(valSet[i]); // P(up) in (0,1)
+    const actual = valSet[i + horizon].price > valSet[i].price ? 1 : 0;
+    sum += (p - actual) * (p - actual);
+    total++;
+  }
+  return total ? sum / total : 1;
+}
+
+function tuneDecisionTree(trainSet: BitcoinDataPoint[]): {
+  best: { rounds: number; learningRate: number };
+  validationAccuracy: number;
+  validationBrier: number;
+  subTrain: BitcoinDataPoint[];
+  valSet: BitcoinDataPoint[];
+} {
+  // Chronological 80/20 split inside the training window
+  const cut = Math.floor(trainSet.length * 0.8);
+  const subTrain = trainSet.slice(0, cut);
+  const valSet = trainSet.slice(cut);
+  const roundsGrid = [15, 25, 40];
+  const lrGrid = [0.1, 0.2, 0.3];
+  let best = { rounds: 25, learningRate: 0.2 };
+  let bestBrier = Infinity;
+  let bestAcc = 0;
+  for (const rounds of roundsGrid) {
+    for (const learningRate of lrGrid) {
+      const m = trainDecisionTree(subTrain, { rounds, learningRate });
+      const brier = treeValidationBrier(m, valSet, 7);
+      if (brier < bestBrier) {
+        bestBrier = brier;
+        bestAcc = treeValidationAccuracy(m, valSet, 7);
+        best = { rounds, learningRate };
+      }
+    }
+  }
+  return { best, validationAccuracy: bestAcc, validationBrier: bestBrier, subTrain, valSet };
+}
+
+function tuneARIMAWindow(trainSet: BitcoinDataPoint[]): { window: number; validationAccuracy: number } {
+  const cut = Math.floor(trainSet.length * 0.8);
+  const subTrain = trainSet.slice(0, cut);
+  const valSet = trainSet.slice(cut);
+  const windows = [60, 100, 150];
+  let bestWindow = 100, bestAcc = -1;
+  for (const w of windows) {
+    const m = solveARIMA(subTrain, w);
+    let correct = 0, total = 0;
+    for (let i = 10; i < valSet.length - 7; i++) {
+      const slice = valSet.slice(i - 10, i + 1).map(x => x.price);
+      const pred = m.predict(slice).direction === "UP" ? 1 : 0;
+      const actual = valSet[i + 7].price > valSet[i].price ? 1 : 0;
+      if (pred === actual) correct++;
+      total++;
+    }
+    const acc = total ? correct / total : 0;
+    if (acc > bestAcc) { bestAcc = acc; bestWindow = w; }
+  }
+  return { window: bestWindow, validationAccuracy: bestAcc };
+}
+
+function runFeatureAblation(
+  subTrain: BitcoinDataPoint[],
+  valSet: BitcoinDataPoint[],
+  chosen: { rounds: number; learningRate: number }
+): FeatureAblationReport {
+  const displayNames: { [k: string]: string } = {
+    rsi: "RSI (14)",
+    fearGreed: "מדד פחד ותאוות בצע",
+    maDiff: "סטיית ממוצע נע",
+    polymarketProb: "פולימרקט",
+    ibitFlow: "תזרים קונים נטו"
+  };
+  const all = ["rsi", "fearGreed", "maDiff", "polymarketProb", "ibitFlow"];
+  const fullModel = trainDecisionTree(subTrain, { ...chosen });
+  const fullAccuracy = treeValidationAccuracy(fullModel, valSet, 7);
+  const fullBrier = treeValidationBrier(fullModel, valSet, 7);
+  const entries: FeatureAblationEntry[] = all.map(f => {
+    const subset = all.filter(x => x !== f);
+    const m = trainDecisionTree(subTrain, { ...chosen, featureSubset: subset });
+    const acc = treeValidationAccuracy(m, valSet, 7);
+    const brier = treeValidationBrier(m, valSet, 7);
+    return {
+      feature: displayNames[f],
+      accuracyWithout: Math.round(acc * 1000) / 1000,
+      delta: Math.round((fullAccuracy - acc) * 1000) / 1000,
+      brierWithout: Math.round(brier * 10000) / 10000,
+      // positive = removing the feature makes Brier worse, i.e. the feature helps
+      deltaBrier: Math.round((brier - fullBrier) * 10000) / 10000
+    };
+  });
+  return {
+    fullAccuracy: Math.round(fullAccuracy * 1000) / 1000,
+    fullBrier: Math.round(fullBrier * 10000) / 10000,
+    entries
+  };
+}
+
 // --- ARIMA Solver (Autoregressive Integrated Moving Average) ---
 // Fit AR(2) on returns: return_t = c + phi1 * return_{t-1} + phi2 * return_{t-2}
-function solveARIMA(data: BitcoinDataPoint[]): {
+function solveARIMA(data: BitcoinDataPoint[], window: number = 100): {
   phi1: number;
   phi2: number;
   predict: (recentPrices: number[]) => { direction: 'UP' | 'DOWN'; probability: number };
   forecast: (recentPrices: number[], horizon: number) => number[];
 } {
   const returns: number[] = [];
-  for (let i = data.length - 100; i < data.length; i++) {
+  for (let i = Math.max(1, data.length - window); i < data.length; i++) {
     if (i > 0) {
       returns.push(Math.log(data[i].price / data[i - 1].price));
     }
@@ -647,16 +786,54 @@ async function getPolymarketState(currentBtcPrice: number, fallbackProb: number)
 // ==========================================
 // 4. ML MODEL COMPREHENSIVE COMPILATION
 // ==========================================
+interface ResearchDiagnostics {
+  tuning: ModelTuning[];
+  featureAblation: FeatureAblationReport;
+}
+// Filled on every evaluateModels() run; served by /api/market-status
+let lastDiagnostics: ResearchDiagnostics | null = null;
+
 function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
   // We divide historical data into train (80%) and test (20%) to compute honest Metrics
   const splitIndex = Math.floor(history.length * 0.8);
   const trainSet = history.slice(0, splitIndex);
   const testSet = history.slice(splitIndex);
 
-  // Train Decision Tree
-  const dtModel = trainDecisionTree(trainSet);
-  // Fit ARIMA
-  const arModel = solveARIMA(trainSet);
+  // --- Hyperparameter tuning (validation split inside the training window) ---
+  const treeTuning = tuneDecisionTree(trainSet);
+  const arimaTuning = tuneARIMAWindow(trainSet);
+
+  lastDiagnostics = {
+    tuning: [
+      {
+        modelId: "xgboost",
+        method: "Grid Search על פיצול ולידציה כרונולוגי (80/20 בתוך סט האימון)",
+        searched: "rounds: 15/25/40, learningRate: 0.1/0.2/0.3",
+        chosen: { rounds: treeTuning.best.rounds, learningRate: treeTuning.best.learningRate },
+        validationAccuracy: Math.round(treeTuning.validationAccuracy * 1000) / 1000,
+        validationBrier: Math.round(treeTuning.validationBrier * 10000) / 10000
+      },
+      {
+        modelId: "arima",
+        method: "בחירת חלון אמידה (lookback) על ולידציה כרונולוגית",
+        searched: "window: 60/100/150 ימי מסחר",
+        chosen: { window: arimaTuning.window },
+        validationAccuracy: Math.round(arimaTuning.validationAccuracy * 1000) / 1000
+      }
+    ],
+    featureAblation: runFeatureAblation(treeTuning.subTrain, treeTuning.valSet, treeTuning.best)
+  };
+
+  // Train Decision Tree with the TUNED hyperparameters (7d is the primary target)
+  const dtModel = trainDecisionTree(trainSet, { ...treeTuning.best, horizon: 7 });
+  // A tree genuinely trained per evaluation horizon (same tuned params, different label)
+  const HORIZONS = [1, 3, 7, 30];
+  const dtByHorizon = new Map<number, { predict: (p: BitcoinDataPoint) => number }>();
+  for (const h of HORIZONS) {
+    dtByHorizon.set(h, h === 7 ? dtModel : trainDecisionTree(trainSet, { ...treeTuning.best, horizon: h }));
+  }
+  // Fit ARIMA with the tuned estimation window
+  const arModel = solveARIMA(trainSet, arimaTuning.window);
   // Fit Prophet
   const prModel = solveProphet(trainSet);
   // Train the recurrent network on the same in-sample data
@@ -672,44 +849,77 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
   // LSTM
   let lsTruePos = 0, lsFalsePos = 0, lsTrueNeg = 0, lsFalseNeg = 0;
 
-  // Run over test set evaluating a 7-day future window
-  for (let i = 15; i < testSet.length - 7; i++) {
-    const current = testSet[i];
-    const actualUp = testSet[i + 7].price > current.price ? 1 : 0;
-    
-    // 1. DT
-    const dtPredVal = dtModel.predict(current);
-    const dtPred = dtPredVal > 0.5 ? 1 : 0;
-    if (dtPred === 1 && actualUp === 1) dtTruePos++;
-    else if (dtPred === 1 && actualUp === 0) dtFalsePos++;
-    else if (dtPred === 0 && actualUp === 0) dtTrueNeg++;
-    else if (dtPred === 0 && actualUp === 1) dtFalseNeg++;
-
-    // 2. ARIMA
-    const slicePrices = testSet.slice(i - 10, i + 1).map(x => x.price);
-    const arPredVal = arModel.predict(slicePrices);
-    const arPred = arPredVal.direction === "UP" ? 1 : 0;
-    if (arPred === 1 && actualUp === 1) arTruePos++;
-    else if (arPred === 1 && actualUp === 0) arFalsePos++;
-    else if (arPred === 0 && actualUp === 0) arTrueNeg++;
-    else if (arPred === 0 && actualUp === 1) arFalseNeg++;
-
-    // 3. Prophet
-    const prPredVal = prModel.predict(new Date(current.date));
-    const prPred = prPredVal.direction === "UP" ? 1 : 0;
-    if (prPred === 1 && actualUp === 1) prTruePos++;
-    else if (prPred === 1 && actualUp === 0) prFalsePos++;
-    else if (prPred === 0 && actualUp === 0) prTrueNeg++;
-    else if (prPred === 0 && actualUp === 1) prFalseNeg++;
-
-    // 4. LSTM
-    const lsPredVal = runLSTM(testSet.slice(i - 15, i + 1));
-    const lsPred = lsPredVal.direction === "UP" ? 1 : 0;
-    if (lsPred === 1 && actualUp === 1) lsTruePos++;
-    else if (lsPred === 1 && actualUp === 0) lsFalsePos++;
-    else if (lsPred === 0 && actualUp === 0) lsTrueNeg++;
-    else if (lsPred === 0 && actualUp === 1) lsFalseNeg++;
+  // Directional accuracy per model per horizon (1/3/7/30 days ahead)
+  const horizonCounts: { [modelId: string]: { [h: number]: { correct: number; total: number } } } = {
+    lstm: {}, xgboost: {}, arima: {}, prophet: {}
+  };
+  for (const mId of Object.keys(horizonCounts)) {
+    for (const h of HORIZONS) horizonCounts[mId][h] = { correct: 0, total: 0 };
   }
+
+  // Run over the test set. The 7-day window remains the primary target for the headline
+  // confusion-matrix metrics (unchanged sample set); shorter/longer horizons are scored too.
+  for (let i = 15; i < testSet.length - 1; i++) {
+    const current = testSet[i];
+
+    // One prediction per model per timestep (cached across horizons)
+    const dtPredByH = new Map<number, number>();
+    for (const h of HORIZONS) {
+      const m = dtByHorizon.get(h) ?? dtModel;
+      dtPredByH.set(h, m.predict(current) > 0.5 ? 1 : 0);
+    }
+    const slicePrices = testSet.slice(i - 10, i + 1).map(x => x.price);
+    const arPred = arModel.predict(slicePrices).direction === "UP" ? 1 : 0;
+    const prPred = prModel.predict(new Date(current.date)).direction === "UP" ? 1 : 0;
+    const lsPred = runLSTM(testSet.slice(i - 15, i + 1)).direction === "UP" ? 1 : 0;
+
+    for (const h of HORIZONS) {
+      if (i + h >= testSet.length) continue;
+      const actualUp = testSet[i + h].price > current.price ? 1 : 0;
+
+      const dtPred = dtPredByH.get(h)!;
+      if (dtPred === actualUp) horizonCounts.xgboost[h].correct++;
+      horizonCounts.xgboost[h].total++;
+      if (arPred === actualUp) horizonCounts.arima[h].correct++;
+      horizonCounts.arima[h].total++;
+      if (prPred === actualUp) horizonCounts.prophet[h].correct++;
+      horizonCounts.prophet[h].total++;
+      if (lsPred === actualUp) horizonCounts.lstm[h].correct++;
+      horizonCounts.lstm[h].total++;
+
+      // Headline confusion matrices: 7-day target, same sample set as before
+      if (h === 7) {
+        if (dtPred === 1 && actualUp === 1) dtTruePos++;
+        else if (dtPred === 1 && actualUp === 0) dtFalsePos++;
+        else if (dtPred === 0 && actualUp === 0) dtTrueNeg++;
+        else if (dtPred === 0 && actualUp === 1) dtFalseNeg++;
+
+        if (arPred === 1 && actualUp === 1) arTruePos++;
+        else if (arPred === 1 && actualUp === 0) arFalsePos++;
+        else if (arPred === 0 && actualUp === 0) arTrueNeg++;
+        else if (arPred === 0 && actualUp === 1) arFalseNeg++;
+
+        if (prPred === 1 && actualUp === 1) prTruePos++;
+        else if (prPred === 1 && actualUp === 0) prFalsePos++;
+        else if (prPred === 0 && actualUp === 0) prTrueNeg++;
+        else if (prPred === 0 && actualUp === 1) prFalseNeg++;
+
+        if (lsPred === 1 && actualUp === 1) lsTruePos++;
+        else if (lsPred === 1 && actualUp === 0) lsFalsePos++;
+        else if (lsPred === 0 && actualUp === 0) lsTrueNeg++;
+        else if (lsPred === 0 && actualUp === 1) lsFalseNeg++;
+      }
+    }
+  }
+
+  const horizonAccuracyFor = (mId: string): { [k: string]: number } => {
+    const out: { [k: string]: number } = {};
+    for (const h of HORIZONS) {
+      const c = horizonCounts[mId][h];
+      out[String(h)] = c.total ? Math.round((c.correct / c.total) * 1000) / 1000 : 0;
+    }
+    return out;
+  };
 
   // Calculate Metrics helper
   const calcMetrics = (tp: number, fp: number, tn: number, fn: number) => {
@@ -754,6 +964,7 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
       prediction: lstmLatest.direction,
       probability: lstmLatest.probability,
       metrics: calcMetrics(lsTruePos, lsFalsePos, lsTrueNeg, lsFalseNeg),
+      horizonAccuracy: horizonAccuracyFor("lstm"),
       featureImportance: {
         "מומנטום מחיר": Math.round((lstmAbs.ret / lstmTot) * 100),
         "RSI (14)": Math.round((lstmAbs.rsi / lstmTot) * 100),
@@ -767,6 +978,7 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
       prediction: xgbProb > 0.5 ? "UP" : "DOWN",
       probability: Math.round(xgbProb * 100),
       metrics: calcMetrics(dtTruePos, dtFalsePos, dtTrueNeg, dtFalseNeg),
+      horizonAccuracy: horizonAccuracyFor("xgboost"),
       featureImportance: { "RSI (14)": dtModel.importance.rsi, "מדד פחד ותאוות בצע": dtModel.importance.fearGreed, "סטיית ממוצע נע": dtModel.importance.maDiff, "פולימרקט": dtModel.importance.polymarketProb, "תזרים קונים נטו": dtModel.importance.ibitFlow }
     },
     {
@@ -776,6 +988,7 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
       prediction: arimaLatest.direction,
       probability: arimaLatest.probability,
       metrics: calcMetrics(arTruePos, arFalsePos, arTrueNeg, arFalseNeg),
+      horizonAccuracy: horizonAccuracyFor("arima"),
       featureImportance: { "מחיר לאג-1 (φ₁)": Math.round((arMag1 / arTot) * 100), "מחיר לאג-2 (φ₂)": Math.round((arMag2 / arTot) * 100) }
     },
     {
@@ -785,6 +998,7 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
       prediction: prophetLatest.direction,
       probability: prophetLatest.probability,
       metrics: calcMetrics(prTruePos, prFalsePos, prTrueNeg, prFalseNeg),
+      horizonAccuracy: horizonAccuracyFor("prophet"),
       featureImportance: { "מגמת מחיר (Trend)": Math.round((trendStrength / prTot) * 100), "מחזוריות שבועית": Math.round((seasonStrength / prTot) * 100) }
     }
   ];
@@ -1313,7 +1527,9 @@ app.get("/api/market-status", async (req, res) => {
       ensemblePrediction,
       metaModelStats,
       accuracyHistory,
-      forecast
+      forecast,
+      tuning: lastDiagnostics?.tuning,
+      featureAblation: lastDiagnostics?.featureAblation
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

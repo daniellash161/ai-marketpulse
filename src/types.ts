@@ -26,6 +26,33 @@ export interface ModelPrediction {
   probability: number; // 0 to 100
   metrics: ModelMetrics;
   featureImportance: { [key: string]: number }; // Feature name to weight
+  // Directional accuracy on the held-out test set per forecast horizon (days -> accuracy 0..1)
+  horizonAccuracy?: { [horizonDays: string]: number };
+}
+
+// Hyperparameter tuning summary for one model (honest record of what was searched and chosen)
+export interface ModelTuning {
+  modelId: string;
+  method: string;                                   // e.g. "Grid search on chronological validation split"
+  searched: string;                                 // human-readable search space
+  chosen: { [param: string]: number | string };     // the selected hyperparameters
+  validationAccuracy: number;                       // directional accuracy (0..1) on the validation slice
+  validationBrier?: number;                         // Brier score (lower is better) - the selection criterion
+}
+
+// Leave-one-out feature ablation: contribution of each feature on the validation slice
+export interface FeatureAblationEntry {
+  feature: string;              // display name (Hebrew)
+  accuracyWithout: number;      // validation accuracy when this feature is removed (0..1)
+  delta: number;                // fullAccuracy - accuracyWithout (positive = feature helps)
+  brierWithout?: number;        // Brier score without the feature (lower is better)
+  deltaBrier?: number;          // brierWithout - fullBrier (positive = feature helps)
+}
+
+export interface FeatureAblationReport {
+  fullAccuracy: number;         // validation accuracy with all features (0..1)
+  fullBrier?: number;           // Brier score with all features (lower is better)
+  entries: FeatureAblationEntry[];
 }
 
 export interface WhaleBet {
@@ -98,6 +125,8 @@ export interface MarketAnalysisResponse {
   metaModelStats?: MetaModelStats;
   accuracyHistory?: ModelAccuracyPoint[];
   forecast?: ForecastPoint[];
+  tuning?: ModelTuning[];
+  featureAblation?: FeatureAblationReport;
 }
 
 export interface ForecastPoint {

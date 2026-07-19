@@ -407,6 +407,115 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
         ))}
       </div>
 
+      {/* Multi-Horizon Directional Accuracy */}
+      <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+        <h3 className="text-md font-bold text-white mb-2 font-sans flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-amber-500" />
+          דיוק כיווני לפי אופק חיזוי (Multi-Horizon Evaluation)
+          <InfoTip text="לכל מודל נמדד אחוז התחזיות הכיווניות הנכונות על סט הבדיקה, עבור 1, 3, 7 ו-30 ימים קדימה. עבור XGBoost אומן מודל נפרד לכל אופק. טווחים קצרים ריאליים יותר לחיזוי; ערכים סביב 50% משקפים את הקושי האמיתי בחיזוי שוק יעיל." />
+        </h3>
+        <p className="text-xs text-slate-400 leading-relaxed mb-4 font-sans">
+          המדדים הראשיים (Accuracy/Recall/F1) מחושבים על יעד של 7 ימים. הטבלה מציגה את הדיוק הכיווני גם לאופקים קצרים וארוכים, על אותו סט בדיקה מחוץ למדגם.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-center font-mono text-xs">
+            <thead>
+              <tr className="text-slate-500">
+                <th className="text-right font-sans py-2 px-2">מודל</th>
+                <th className="py-2 px-2">יום 1</th>
+                <th className="py-2 px-2">3 ימים</th>
+                <th className="py-2 px-2">7 ימים</th>
+                <th className="py-2 px-2">30 יום</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.models.map((model) => (
+                <tr key={`hz-${model.modelId}`} className="border-t border-slate-800">
+                  <td className="text-right font-sans text-slate-300 py-2 px-2">{model.modelName}</td>
+                  {["1", "3", "7", "30"].map((h) => {
+                    const acc = model.horizonAccuracy?.[h];
+                    return (
+                      <td key={h} className={`py-2 px-2 font-bold ${
+                        acc === undefined ? "text-slate-600" :
+                        acc >= 0.54 ? "text-emerald-400" :
+                        acc >= 0.5 ? "text-amber-400" : "text-rose-400"
+                      }`}>
+                        {acc === undefined ? "-" : `${(acc * 100).toFixed(1)}%`}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Hyperparameter Tuning & Feature Ablation */}
+      {(data.tuning || data.featureAblation) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Tuning */}
+          {data.tuning && (
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+              <h3 className="text-md font-bold text-white mb-2 font-sans flex items-center gap-2">
+                <Sliders className="w-5 h-5 text-amber-500" />
+                אופטימיזציית היפרפרמטרים
+                <InfoTip text="לכל מודל בוצע חיפוש על מרחב פרמטרים, עם בחירה לפי ציון Brier (איכות ההסתברות, נמוך = טוב) על פיצול ולידציה כרונולוגי בתוך סט האימון בלבד, ללא דליפה לסט הבדיקה." />
+              </h3>
+              <div className="space-y-3">
+                {data.tuning.map((t) => (
+                  <div key={t.modelId} className="bg-slate-950 border border-slate-850 rounded-xl p-3.5">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <span className="text-xs font-bold text-slate-200 font-sans">
+                        {t.modelId === "xgboost" ? "XGBoost (עצים מועצמים)" : t.modelId === "arima" ? "ARIMA" : t.modelId}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        Val Acc: {(t.validationAccuracy * 100).toFixed(1)}%
+                        {t.validationBrier !== undefined ? ` | Brier: ${t.validationBrier.toFixed(4)}` : ""}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 font-sans mb-1">{t.method}</p>
+                    <p className="text-[10px] text-slate-500 font-mono" style={{ direction: "ltr", textAlign: "left" }}>
+                      searched: {t.searched}
+                    </p>
+                    <p className="text-[10px] text-amber-400 font-mono" style={{ direction: "ltr", textAlign: "left" }}>
+                      chosen: {Object.entries(t.chosen).map(([k, v]) => `${k}=${v}`).join(", ")}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ablation */}
+          {data.featureAblation && (
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+              <h3 className="text-md font-bold text-white mb-2 font-sans flex items-center gap-2">
+                <Scale className="w-5 h-5 text-amber-500" />
+                ברירת מאפיינים: ניתוח אבלציה (Leave-One-Out)
+                <InfoTip text="המודל אומן מחדש כאשר בכל פעם הוסר מאפיין אחד, ונמדדה הפגיעה בציון Brier על סט הולידציה. דלתא חיובית = המאפיין תורם; קרוב לאפס = תרומה שולית. תרומות שוליות הן ממצא כן, עקבי עם הקושי הכללי בחיזוי." />
+              </h3>
+              <p className="text-[10px] text-slate-500 font-mono mb-3" style={{ direction: "ltr", textAlign: "left" }}>
+                Full model: Brier {data.featureAblation.fullBrier?.toFixed(4)} | Acc {(data.featureAblation.fullAccuracy * 100).toFixed(1)}%
+              </p>
+              <div className="space-y-2">
+                {data.featureAblation.entries.map((e) => (
+                  <div key={e.feature} className="flex justify-between items-center bg-slate-950 border border-slate-850 rounded-lg px-3 py-2">
+                    <span className="text-[11px] text-slate-300 font-sans">בלי {e.feature}</span>
+                    <span className={`text-[10px] font-mono font-bold ${
+                      (e.deltaBrier ?? 0) > 0.0005 ? "text-emerald-400" :
+                      (e.deltaBrier ?? 0) < -0.0005 ? "text-rose-400" : "text-slate-400"
+                    }`}>
+                      ΔBrier {e.deltaBrier !== undefined ? (e.deltaBrier >= 0 ? "+" : "") + e.deltaBrier.toFixed(4) : "-"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Quality Metrics & Validation Guide */}
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
         <h3 className="text-md font-bold text-white mb-2 font-sans flex items-center gap-2">
