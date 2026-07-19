@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI MarketPulse · מצגת הפרויקט</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e1a; --bg2:#0d1322; --panel:rgba(255,255,255,.045);
+    --border:rgba(255,255,255,.10); --gold:#f0a32e; --gold2:#ffc45e;
+    --text:#eef1f7; --muted:#9aa5bb; --green:#34d399; --red:#f87171;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;font-family:"Heebo",sans-serif;color:var(--text);
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+
+  .stage{position:fixed;inset:0;display:grid;place-items:center;background:#000}
+  .deck{position:relative;width:min(100vw,177.78vh);aspect-ratio:16/9;overflow:hidden;
+    background:radial-gradient(1200px 600px at 80% -10%, rgba(240,163,46,.10), transparent 60%),
+               radial-gradient(900px 500px at 5% 105%, rgba(90,120,180,.08), transparent 55%),
+               linear-gradient(160deg,var(--bg2),var(--bg))}
+
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+    justify-content:center;padding:4.5% 6%;text-align:center}
+  .slide.active{display:flex;animation:fade .5s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .logo{width:5.2em;height:5.2em;border-radius:22%;display:grid;place-items:center;
+    background:linear-gradient(155deg,var(--gold2),var(--gold));color:#1c1300;
+    font-weight:900;font-size:1em;box-shadow:0 0 46px rgba(240,163,46,.5)}
+  .logo span{font-size:3em;line-height:1}
+
+  h1{font-size:2.6em;font-weight:900;line-height:1.2;letter-spacing:-.5px}
+  h2{font-size:1.85em;font-weight:800;line-height:1.25;margin-bottom:.7em}
+  .accent{color:var(--gold2)}
+  .sub{color:var(--muted);font-size:1.02em;font-weight:300;max-width:34em;line-height:1.65}
+
+  .glass{background:var(--panel);border:1px solid var(--border);border-radius:1.1em;
+    backdrop-filter:blur(6px)}
+  .glow{border-color:rgba(240,163,46,.5);box-shadow:0 0 34px rgba(240,163,46,.14)}
+
+  .pill{display:inline-block;border:1.5px solid var(--gold);border-radius:2em;
+    padding:.5em 1.2em;color:var(--text);font-size:.82em;font-weight:500;
+    background:rgba(240,163,46,.06)}
+  .chip{display:inline-block;background:rgba(255,255,255,.06);border:1px solid var(--border);
+    border-radius:2em;padding:.42em 1em;color:var(--muted);font-size:.8em;margin:0 .3em}
+
+  .cols{display:flex;gap:1.4em;width:100%;align-items:stretch}
+  .cols>div{flex:1}
+  .card{padding:1.3em 1.4em;text-align:right}
+  .card h3{font-size:1.08em;font-weight:800;margin-bottom:.55em}
+  .card ul{list-style:none}
+  .card li{font-size:.86em;color:var(--muted);font-weight:300;line-height:1.55;
+    padding-right:1.1em;position:relative;margin-bottom:.45em}
+  .card li::before{content:"";position:absolute;right:0;top:.55em;width:.42em;height:.42em;
+    border-radius:50%;background:var(--gold)}
+  .card.bad li::before{background:var(--red)}
+  .card .tag{font-size:.78em;font-weight:700;padding:.25em .8em;border-radius:2em;display:inline-block;margin-bottom:.6em}
+  .tag.ok{background:rgba(52,211,153,.12);color:var(--green)}
+  .tag.no{background:rgba(248,113,113,.12);color:var(--red)}
+
+  table{border-collapse:collapse;width:100%;font-size:.86em}
+  th{background:rgba(240,163,46,.12);color:var(--gold2);font-weight:700;padding:.5em .7em;
+    border:1px solid var(--border)}
+  td{padding:.48em .7em;border:1px solid var(--border);color:var(--text)}
+  td.dim{color:var(--muted)}
+  .good{color:var(--green);font-weight:700}
+  .mid{color:var(--gold2);font-weight:700}
+  .low{color:var(--red);font-weight:700}
+
+  .banner{border:1.5px solid var(--gold);border-radius:1em;padding:.75em 1.4em;
+    background:rgba(240,163,46,.07);font-size:.92em;font-weight:500;line-height:1.5}
+
+  .foot{position:absolute;bottom:2.6%;left:0;right:0;display:flex;justify-content:center;gap:1.5em;
+    color:#5b6579;font-size:.68em;font-weight:300}
+
+  .nav{position:fixed;bottom:14px;left:18px;display:flex;gap:10px;align-items:center;z-index:5;
+    color:#8a93a8;font-size:13px;direction:ltr}
+  .nav button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#cfd6e4;
+    border-radius:8px;padding:5px 13px;cursor:pointer;font-size:15px}
+  .nav button:hover{border-color:var(--gold)}
+
+  .num{font-size:2.2em;font-weight:900;color:var(--gold2)}
+  .steps{text-align:right;max-width:30em}
+  .step{margin-bottom:1.05em;padding-right:1.2em;border-right:3px solid var(--gold);
+    text-align:right}
+  .step b{display:block;font-size:1em}
+  .step span{font-size:.84em;color:var(--muted);font-weight:300;line-height:1.5}
+
+  .mono{font-family:Menlo,Consolas,monospace;direction:ltr;display:inline-block}
+</style>
+</head>
+<body>
+<div class="stage"><div class="deck" id="deck">
+
+  <!-- 1. שער -->
+  <section class="slide active">
+    <div class="logo" style="margin-bottom:1em"><span>B</span></div>
+    <h1>:AI MarketPulse<br>מודיעין שוק מבוסס נתונים.</h1>
+    <p class="sub" style="margin-top:.9em">מהמודלים הסטטיסטיים, דרך ניתוח חוכמת ההמונים,
+      ועד להחלטה המחקרית שלך.</p>
+    <div style="margin-top:1.6em" class="pill">מנוע קבלת החלטות המשלב למידת מכונה, אינדיקטורים פיננסיים ושקיפות מוחלטת.</div>
+    <div class="foot"><span>דניאלה שמש · שחר קוזניאק · יונתן חגי</span><span>·</span><span>פרויקט אקדמי מחקרי, אינו ייעוץ פיננסי</span></div>
+  </section>
+
+  <!-- 2. הגישה -->
+  <section class="slide">
+    <h2>חיזוי שוק הביטקוין הוא משימה מורכבת.<br>בחרנו בשקיפות מחקרית, לא בהבטחות קסם.</h2>
+    <div class="cols" style="max-width:88%">
+      <div class="glass glow card">
+        <span class="tag ok">✓ הדרך שלנו: שקיפות מחקרית</span>
+        <ul>
+          <li>הצגת תמונת מצב הסתברותית בכנות מלאה.</li>
+          <li>כלי מחקרי שמציג את מגבלות המודלים ורמת הביטחון.</li>
+          <li>כל תוצאה נמדדת מול בסיס השוואה נאיבי, על אותם נתונים בדיוק.</li>
+        </ul>
+      </div>
+      <div class="glass card bad">
+        <span class="tag no">✗ הגישה הישנה: קופסה שחורה</span>
+        <ul>
+          <li>הבטחות לתחזיות מדויקות תמיד.</li>
+          <li>המלצות השקעה עיוורות.</li>
+          <li>התעלמות מתנודתיות ויעילות השוק.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="banner" style="margin-top:1.4em;max-width:80%">
+      דיוק סביב 50% בשוק יעיל אינו תקלה. הוא ממצא המשקף את מציאות השוק,
+      והמערכת מציגה אותו בגלוי במקום להסתיר.
+    </div>
+  </section>
+
+  <!-- 3. המוצר -->
+  <section class="slide">
+    <h2>תמונת מצב מלאה ובהירה במסך אחד.</h2>
+    <div class="cols" style="max-width:94%;align-items:center">
+      <div class="glass glow" style="flex:1.5;padding:1em;text-align:right">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:.5em;margin-bottom:.7em">
+          <span style="font-weight:800;font-size:.95em"><span style="color:var(--gold2)">B</span> AI MarketPulse</span>
+          <span class="mono" style="color:var(--green);font-weight:700">BTC/USD $64,602</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.55em;font-size:.78em">
+          <div class="glass" style="padding:.6em"><div style="color:var(--muted)">RSI (14)</div><div class="mono" style="font-size:1.25em;font-weight:800">54.3</div></div>
+          <div class="glass" style="padding:.6em"><div style="color:var(--muted)">פחד/חמדנות</div><div class="mono" style="font-size:1.25em;font-weight:800">28</div></div>
+          <div class="glass" style="padding:.6em"><div style="color:var(--muted)">תזרים קונים</div><div class="mono" style="font-size:1.25em;font-weight:800;color:var(--green)">+$7M</div></div>
+          <div class="glass" style="padding:.6em"><div style="color:var(--muted)">MA50</div><div class="mono" style="font-weight:700">$63,414</div></div>
+          <div class="glass" style="padding:.6em"><div style="color:var(--muted)">MA150</div><div class="mono" style="font-weight:700">$69,887</div></div>
+          <div class="glass" style="padding:.6em"><div style="color:var(--muted)">GARCH שנתי</div><div class="mono" style="font-weight:700">40%</div></div>
+        </div>
+        <div class="glass" style="margin-top:.55em;padding:.6em;font-size:.78em;display:flex;justify-content:space-between">
+          <span style="color:var(--muted)">אנסמבל 7 ימים</span>
+          <span class="mono" style="color:var(--green);font-weight:800">UP · 53%</span>
+          <span style="color:var(--muted)">פולימרקט חי (CLOB)</span>
+        </div>
+      </div>
+      <div style="flex:1;text-align:right">
+        <div class="step"><b>נתוני אמת בלבד</b><span>Binance מ-2020 (כ-2,400 ימים), מדד פחד/חמדנות, ספר פקודות Polymarket חי.</span></div>
+        <div class="step"><b>אנסמבל 4 מודלים</b><span>Prophet, ARIMA, XGBoost, LSTM עם שקלול נלמד.</span></div>
+        <div class="step"><b>הסבר לכל מספר</b><span>כל רכיב בדשבורד מלווה בהסבר בעברית ובמגבלותיו.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. ארכיטקטורה -->
+  <section class="slide">
+    <h2>ארכיטקטורת 4 שכבות: הפיכת נתונים גולמיים לתובנות מחקריות.</h2>
+    <div class="steps">
+      <div class="step"><b>שכבה 1: נתוני שוק חיים</b><span>משיכת נתונים היסטוריים וזמן אמת ממקורות מאומתים (Binance, alternative.me, Polymarket). קריאה בלבד.</span></div>
+      <div class="step"><b>שכבה 2: מנוע אינדיקטורים</b><span>RSI, ממוצעים נעים 50/150/200, תנודתיות GARCH(1,1) ותזרים קונים נטו.</span></div>
+      <div class="step"><b>שכבה 3: מודלים ואנסמבל</b><span>4 מודלים סטטיסטיים ונוירוניים; מטא-מודל SGD לומד את משקלי השקלול ביניהם.</span></div>
+      <div class="step"><b>שכבה 4: ולידציה ושקיפות</b><span>הערכה כרונולוגית ללא דליפה, השוואה ל-Polymarket, בסיס נאיבי ודוח סיכום בעברית.</span></div>
+    </div>
+  </section>
+
+  <!-- 5. המודלים + SGD -->
+  <section class="slide">
+    <h2>ארבעה מודלים, שכבת שילוב אחת חכמה.</h2>
+    <div class="cols" style="max-width:92%">
+      <div class="glass card"><h3 class="accent">Prophet</h3><ul><li>מגמה + עונתיות שבועית.</li></ul></div>
+      <div class="glass card"><h3 class="accent">ARIMA</h3><ul><li>מודל אוטורגרסיבי על תשואות.</li></ul></div>
+      <div class="glass card"><h3 class="accent">XGBoost</h3><ul><li>עצי החלטה מועצמים על 5 מאפיינים.</li></ul></div>
+      <div class="glass card"><h3 class="accent">LSTM</h3><ul><li>רשת חוזרת הלומדת רצפים.</li></ul></div>
+    </div>
+    <div class="glass glow card" style="margin-top:1.3em;max-width:80%;text-align:right">
+      <h3>מה בדיוק לומד ה-SGD? את משקלי האנסמבל.</h3>
+      <ul>
+        <li>קלט: ארבע ההסתברויות שהמודלים נתנו בכל נקודת זמן היסטורית.</li>
+        <li>יעד: האם המחיר באמת עלה 7 ימים אחר כך.</li>
+        <li>הלמידה מעדכנת את משקל כל מודל בשקלול הסופי, לא פרמטרים פנימיים ולא מאפיינים.</li>
+        <li>בדשבורד: עקומת התכנסות (Loss) וכוונון ידני של המשקלים.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6. מתודולוגיה -->
+  <section class="slide">
+    <h2>מתודולוגיית הערכה: כרונולוגית, נקייה, מול בסיס.</h2>
+    <div class="cols" style="max-width:92%">
+      <div class="glass card">
+        <h3><span class="num">80/20</span></h3>
+        <ul><li>חלוקה כרונולוגית: 80% אימון, 20% בדיקה מחוץ למדגם (479 ימים).</li>
+        <li>בתוך האימון: פיצול ולידציה נוסף (80/20) לכוונון, כך שסט הבדיקה נשאר נקי.</li></ul>
+      </div>
+      <div class="glass card">
+        <h3><span class="num">Brier</span></h3>
+        <ul><li>מדד איכות ההסתברות: ממוצע ריבועי המרחק בין ההסתברות לתוצאה.</li>
+        <li>0.25 שקול לניחוש 50/50; נמוך יותר = טוב יותר. משמש כקריטריון הבחירה.</li></ul>
+      </div>
+      <div class="glass card">
+        <h3><span class="num">בסיס</span></h3>
+        <ul><li>כל תוצאה נמדדת מול "תמיד עלייה": שיעור ימי העלייה בפועל באותן דגימות.</li>
+        <li>מודל מוסיף ערך רק אם הוא מעל הבסיס הזה.</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. אופטימיזציה -->
+  <section class="slide">
+    <h2>אופטימיזציית היפרפרמטרים: לא ניחוש, חיפוש.</h2>
+    <div style="max-width:84%">
+      <table>
+        <tr><th>מודל</th><th>מרחב חיפוש</th><th>נבחר</th><th>ולידציה</th></tr>
+        <tr><td>XGBoost</td><td class="dim mono">rounds 15/25/40 × lr 0.1/0.2/0.3</td>
+            <td class="mono mid">rounds=15, lr=0.1</td><td class="mono">Brier 0.252 · Acc 51.3%</td></tr>
+        <tr><td>ARIMA</td><td class="dim mono">window 60/100/150</td>
+            <td class="mono mid">window=150</td><td class="mono">Acc 52.5%</td></tr>
+        <tr><td>Prophet / LSTM</td><td class="dim">פרמטרים קבועים מתועדים</td>
+            <td class="dim">ללא שינוי</td><td class="dim">עבודת המשך</td></tr>
+      </table>
+    </div>
+    <div class="banner" style="margin-top:1.3em;max-width:80%">
+      ממצא כן: החיפוש בחר דווקא בקונפיגורציה השמרנית ביותר.
+      אין בנתונים אות חזק שמצדיק מודל אגרסיבי, וזה עקבי עם שאר הממצאים.
+    </div>
+  </section>
+
+  <!-- 8. ברירת מאפיינים -->
+  <section class="slide">
+    <h2>ברירת מאפיינים: נימוק לכל מאפיין ומבחן אבלציה.</h2>
+    <div class="cols" style="max-width:92%">
+      <div class="glass card" style="flex:1.1">
+        <h3>למה 5 המאפיינים האלה?</h3>
+        <ul>
+          <li><b>RSI(14)</b>: מומנטום ומדד קניית/מכירת יתר.</li>
+          <li><b>פחד/חמדנות</b>: סנטימנט מצרפי של השוק.</li>
+          <li><b>סטייה מ-MA50</b>: מרחק מהמגמה (חזרה לממוצע).</li>
+          <li><b>Polymarket</b>: חוכמת המונים משוק ניבויים.</li>
+          <li><b>תזרים קונים</b>: זרימת כסף בפועל, לא רק מחיר.</li>
+        </ul>
+      </div>
+      <div class="glass card" style="flex:1">
+        <h3>אבלציה (Leave-One-Out)</h3>
+        <table style="font-size:.8em">
+          <tr><th>הוסר</th><th>ΔBrier</th></tr>
+          <tr><td>RSI (14)</td><td class="mono low">-0.0006</td></tr>
+          <tr><td>פחד/חמדנות</td><td class="mono dim">0.0000</td></tr>
+          <tr><td>סטיית ממוצע נע</td><td class="mono dim">+0.0001</td></tr>
+          <tr><td>פולימרקט</td><td class="mono dim">0.0000</td></tr>
+          <tr><td>תזרים קונים</td><td class="mono dim">0.0000</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="banner" style="margin-top:1.2em;max-width:80%">
+      אף מאפיין בודד אינו מחזיק כוח ניבוי משמעותי לטווח קצר. ממצא מחקרי תקף,
+      עקבי עם השערת השוק היעיל.
+    </div>
+  </section>
+
+  <!-- 9. תוצאות לפי אופק -->
+  <section class="slide">
+    <h2>התוצאות באמת: דיוק כיווני לפי אופק, מול בסיס נאיבי.</h2>
+    <div style="max-width:82%">
+      <table>
+        <tr><th>מודל</th><th>יום 1</th><th>3 ימים</th><th>7 ימים</th><th>30 יום</th></tr>
+        <tr><td>LSTM</td><td class="low">48.6%</td><td class="mid">51.2%</td><td class="mid">51.2%</td><td class="good">53.9%</td></tr>
+        <tr><td>* XGBoost</td><td class="low">49.5%</td><td class="mid">52.5%</td><td class="mid">51.2%</td><td class="low">46.5%</td></tr>
+        <tr><td>ARIMA</td><td class="low">49.9%</td><td class="good">53.4%</td><td class="mid">50.1%</td><td class="low">49.5%</td></tr>
+        <tr><td>* Prophet</td><td class="low">49.5%</td><td class="mid">52.5%</td><td class="mid">51.2%</td><td class="low">46.5%</td></tr>
+        <tr style="background:rgba(255,255,255,.04)"><td class="dim">בסיס: "תמיד עלייה"</td>
+          <td class="dim">49.5%</td><td class="dim">52.5%</td><td class="dim">51.2%</td><td class="dim">46.5%</td></tr>
+      </table>
+      <p style="font-size:.72em;color:var(--muted);margin-top:.7em;text-align:right">
+        * חזה "עלייה" בכל תקופת הבדיקה, ולכן שווה לבסיס. סט בדיקה: 479 ימים, 434 עד 463 דגימות לאופק.
+        נמדד ואומת תכנותית על נתוני Binance אמיתיים (יולי 2026).
+      </p>
+    </div>
+    <div class="banner" style="margin-top:.9em;max-width:80%">
+      עקיפות קטנות בלבד: ARIMA ל-3 ימים ו-LSTM ל-30 יום. השאר על הבסיס או מתחתיו.
+      חיזוי כיווני קצר-טווח קרוב להטלת מטבע, וזו התשובה הכנה.
+    </div>
+  </section>
+
+  <!-- 10. פולימרקט ומסקנות -->
+  <section class="slide">
+    <h2>מול חוכמת ההמונים, ומה למדנו.</h2>
+    <div class="cols" style="max-width:92%">
+      <div class="glass card">
+        <h3>השוואה ל-Polymarket</h3>
+        <ul>
+          <li><b>בזמן אמת</b>: הסתברות המודל מול ההסתברות המרומזת מספר פקודות CLOB אמיתי, כולל כרטיס פער ארביטראז'.</li>
+          <li><b>מגבלה מוצהרת</b>: המאפיין ההיסטורי הוא פרוקסי (אין היסטוריית Polymarket מלאה מ-2020); איסוף אמיתי הוגדר כעבודת המשך.</li>
+        </ul>
+      </div>
+      <div class="glass glow card">
+        <h3>מסקנות עיקריות</h3>
+        <ul>
+          <li>המערכת עובדת מקצה לקצה על נתוני אמת.</li>
+          <li>רוב המודלים אינם עוקפים בסיס נאיבי; היכן שכן, העקיפה קטנה.</li>
+          <li>האופטימיזציה והאבלציה מחזקות את אותה מסקנה כנה.</li>
+          <li>הערך: מסגרת הערכה שקופה, לא הבטחת רווח.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. סיום -->
+  <section class="slide">
+    <div class="logo" style="margin-bottom:1em"><span>B</span></div>
+    <h1>אל תנסו לנחש את השוק.<br>תתחילו לחקור אותו.</h1>
+    <div style="margin-top:1.4em">
+      <span class="chip">אנסמבל משוקלל וחכם.</span>
+      <span class="chip">שקוף ואובייקטיבי.</span>
+      <span class="chip">מבוסס נתונים אמיתיים.</span>
+    </div>
+    <p style="margin-top:1.6em;color:var(--gold2);font-weight:700">AI MarketPulse - ממודלים מורכבים להחלטות פשוטות.</p>
+    <div class="foot"><span>github.com/daniellash161/ai-marketpulse</span><span>·</span><span>מחקרי בלבד, אינו ייעוץ פיננסי</span></div>
+  </section>
+
+</div></div>
+
+<div class="nav">
+  <button onclick="go(-1)">‹</button>
+  <span id="counter">1 / 11</span>
+  <button onclick="go(1)">›</button>
+  <span style="margin-inline-start:8px;opacity:.6">חצים במקלדת · F למסך מלא</span>
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll(".slide")];
+  let cur = 0;
+  function show(i){
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, j) => s.classList.toggle("active", j === cur));
+    document.getElementById("counter").textContent = (cur + 1) + " / " + slides.length;
+  }
+  function go(d){ show(cur + d); }
+  addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") go(1);        // RTL: left = forward
+    else if (e.key === "ArrowRight") go(-1);
+    else if (e.key === " " || e.key === "PageDown") go(1);
+    else if (e.key === "PageUp") go(-1);
+    else if (e.key.toLowerCase() === "f") document.documentElement.requestFullscreen?.();
+  });
+  document.getElementById("deck").addEventListener("click", e => {
+    if (e.target.closest(".nav")) return;
+    go(1);
+  });
+  // Font-size scales with deck width so slides look identical at any size
+  const deck = document.getElementById("deck");
+  const fit = () => { deck.style.fontSize = (deck.clientWidth / 62) + "px"; };
+  new ResizeObserver(fit).observe(deck); fit();
+</script>
+</body>
+</html>
