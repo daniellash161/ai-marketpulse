@@ -112,7 +112,34 @@
     <div class="foot"><span>דניאלה שמש · שחר קוזניאק · יונתן חגי</span><span>·</span><span>פרויקט אקדמי מחקרי, אינו ייעוץ פיננסי</span></div>
   </section>
 
-  <!-- 2. הגישה -->
+  <!-- 2. הבעיה -->
+  <section class="slide">
+    <h2>הבעיה: יותר מדי מידע, פחות מדי בהירות.</h2>
+    <div class="cols" style="max-width:88%">
+      <div class="glass card">
+        <h3 class="accent">מה המשקיע רואה</h3>
+        <ul>
+          <li>מחיר, נפח, RSI, ממוצעים נעים, מדדי פחד, חדשות ורשתות חברתיות.</li>
+          <li>עודף מידע שלא מתחבר לתמונה אחת ברורה.</li>
+          <li>קושי להבחין בין רעש רגעי לבין אות שחזר בעבר.</li>
+        </ul>
+      </div>
+      <div class="glass glow card">
+        <h3 class="accent">מה חסר לו</h3>
+        <ul>
+          <li>מסך החלטה אחד בעברית שמארגן את הכל.</li>
+          <li>הסבר מה תומך בכניסה לשוק, מה מזהיר מפניה, ומה כדאי להמשיך לבדוק.</li>
+          <li>שקיפות: כמה אפשר בכלל לסמוך על התחזית.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="banner" style="margin-top:1.3em;max-width:78%">
+      החלטה המבוססת על תחושת בטן בשוק תנודתי עלולה להטעות.
+      AI MarketPulse בודק האם אפשר לבסס אותה על נתונים, ומדווח בכנות עד כמה.
+    </div>
+  </section>
+
+  <!-- 3. הגישה -->
   <section class="slide">
     <h2>חיזוי שוק הביטקוין הוא משימה מורכבת.<br>בחרנו בשקיפות מחקרית, לא בהבטחות קסם.</h2>
     <div class="cols" style="max-width:88%">
@@ -303,7 +330,31 @@
     </div>
   </section>
 
-  <!-- 10. פולימרקט ומסקנות -->
+  <!-- Backtesting -->
+  <section class="slide">
+    <h2>Backtesting: אסטרטגיות מול קנה-והחזק, על נתוני אמת.</h2>
+    <div style="max-width:86%">
+      <table>
+        <tr><th>אסטרטגיה</th><th>תשואה כוללת</th><th>ירידה מקס'</th><th>Sharpe</th><th>עסקאות</th></tr>
+        <tr style="background:rgba(255,255,255,.04)"><td class="dim">קנה והחזק (בסיס)</td>
+          <td class="good">+287.1%</td><td class="low">52.9%-</td><td class="mono">1.05</td><td class="mono dim">1</td></tr>
+        <tr><td>חציית ממוצע נע MA150</td><td class="mid">+209.4%</td><td class="good">26.3%-</td><td class="mono mid">1.05</td><td class="mono dim">18</td></tr>
+        <tr><td>קניית שפל (RSI &lt; 30)</td><td>+31.0%</td><td class="low">47.0%-</td><td class="mono">0.40</td><td class="mono dim">15</td></tr>
+        <tr><td>השקעה מחזורית (DCA, בסיס)</td><td>+27.0%</td><td class="low">50.3%-</td><td class="mono">0.37</td><td class="mono dim">186</td></tr>
+        <tr><td>פחד/חמדנות קיצוני</td><td>+22.1%</td><td class="low">52.9%-</td><td class="mono">0.34</td><td class="mono dim">2</td></tr>
+        <tr><td>אנסמבל ML</td><td class="dim">0 עסקאות</td><td class="dim">-</td><td class="dim">-</td><td class="mono dim">0</td></tr>
+      </table>
+      <p style="font-size:.72em;color:var(--muted);margin-top:.7em;text-align:right">
+        סימולציה על נתוני Binance אמיתיים מ-2023-01-01, ללא עמלות. תוצאות עבר אינן מבטיחות ביצועים עתידיים.
+      </p>
+    </div>
+    <div class="banner" style="margin-top:.8em;max-width:82%">
+      גם כאן, בכנות: אף אסטרטגיה לא היכתה את קנה-והחזק בתשואה בשוק עולה.
+      MA150 השיגה Sharpe זהה עם כמחצית הסיכון, והאנסמבל נותר שמרני ולא ביצע עסקאות.
+    </div>
+  </section>
+
+  <!-- פולימרקט ומסקנות -->
   <section class="slide">
     <h2>מול חוכמת ההמונים, ומה למדנו.</h2>
     <div class="cols" style="max-width:92%">
@@ -326,7 +377,32 @@
     </div>
   </section>
 
-  <!-- 11. סיום -->
+  <!-- מגבלות ועבודה עתידית -->
+  <section class="slide">
+    <h2>מגבלות ידועות ועבודה עתידית. כי כנות זה גם זה.</h2>
+    <div class="cols" style="max-width:90%">
+      <div class="glass card">
+        <h3 class="accent">מה אנחנו יודעים שחסר</h3>
+        <ul>
+          <li>קושי מובנה בחיזוי שוק יעיל; אין מובהקות סטטיסטית פורמלית (p-values, מרווחי סמך) בשלב זה.</li>
+          <li>המאפיין ההיסטורי של Polymarket הוא פרוקסי מוצהר.</li>
+          <li>מדגם קטן יחסית באופק 30 יום; תלות ב-API חיצוניים.</li>
+          <li>Prophet ו-LSTM עדיין ללא כוונון היפרפרמטרים.</li>
+        </ul>
+      </div>
+      <div class="glass glow card">
+        <h3 class="accent">לאן ממשיכים</h3>
+        <ul>
+          <li>איסוף היסטוריית Polymarket אמיתית ובדיקה חוזרת של ההשערה.</li>
+          <li>אימות סטטיסטי מתקדם: walk-forward מלא ומרווחי סמך.</li>
+          <li>הרחבת אסטרטגיות ה-Backtesting וכוונון כל המודלים.</li>
+          <li>מסחר אוטומטי וחיבור ארנק נשארים מחוץ להיקף, מטעמי אתיקה.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- סיום -->
   <section class="slide">
     <div class="logo" style="margin-bottom:1em"><span>B</span></div>
     <h1>אל תנסו לנחש את השוק.<br>תתחילו לחקור אותו.</h1>
@@ -343,7 +419,7 @@
 
 <div class="nav">
   <button onclick="go(-1)">‹</button>
-  <span id="counter">1 / 11</span>
+  <span id="counter">1 / 14</span>
   <button onclick="go(1)">›</button>
   <span style="margin-inline-start:8px;opacity:.6">חצים במקלדת · F למסך מלא</span>
 </div>
