@@ -55,6 +55,18 @@ export interface FeatureAblationReport {
   entries: FeatureAblationEntry[];
 }
 
+// Per-horizon evaluation context: sample count and the naive "always UP" baseline,
+// i.e. the share of test samples whose price actually rose over that horizon.
+export interface HorizonBaseline {
+  samples: number;
+  upShare: number;              // 0..1; accuracy of a model that always predicts UP
+}
+
+export interface EvaluationInfo {
+  testSize: number;                                  // number of test-set points
+  horizonBaseline: { [horizonDays: string]: HorizonBaseline };
+}
+
 export interface WhaleBet {
   address: string;
   name: string;
@@ -127,6 +139,7 @@ export interface MarketAnalysisResponse {
   forecast?: ForecastPoint[];
   tuning?: ModelTuning[];
   featureAblation?: FeatureAblationReport;
+  evaluationInfo?: EvaluationInfo;
 }
 
 export interface ForecastPoint {

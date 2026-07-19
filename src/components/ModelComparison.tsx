@@ -414,8 +414,16 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
           דיוק כיווני לפי אופק חיזוי (Multi-Horizon Evaluation)
           <InfoTip text="לכל מודל נמדד אחוז התחזיות הכיווניות הנכונות על סט הבדיקה, עבור 1, 3, 7 ו-30 ימים קדימה. עבור XGBoost אומן מודל נפרד לכל אופק. טווחים קצרים ריאליים יותר לחיזוי; ערכים סביב 50% משקפים את הקושי האמיתי בחיזוי שוק יעיל." />
         </h3>
+        <p className="text-xs text-slate-400 leading-relaxed mb-2 font-sans">
+          <strong className="text-slate-300">מה בודקים כאן?</strong> כל מודל חוזה "עלייה" או "ירידה". הטבלה מודדת כמה אחוז מהתחזיות היו נכונות
+          כשבודקים את המחיר בפועל אחרי יום, 3 ימים, שבוע וחודש, על נתונים שהמודל לא ראה באימון (סט הבדיקה).
+          עבור XGBoost אומן מודל נפרד לכל אופק; שאר המודלים נותנים אות כיווני אחד שנבחן מול כל אופק.
+        </p>
         <p className="text-xs text-slate-400 leading-relaxed mb-4 font-sans">
-          המדדים הראשיים (Accuracy/Recall/F1) מחושבים על יעד של 7 ימים. הטבלה מציגה את הדיוק הכיווני גם לאופקים קצרים וארוכים, על אותו סט בדיקה מחוץ למדגם.
+          <strong className="text-slate-300">איך קוראים את הטבלה?</strong> שורת "בסיס נאיבי" מציגה מה היה הדיוק של מי שפשוט אומר "עלייה" כל יום.
+          מודל מעניין רק אם הוא עוקף את השורה הזו. <span className="text-emerald-400">ירוק = מעל 54%</span>,
+          <span className="text-amber-400"> צהוב = 50% עד 54%</span>, <span className="text-rose-400">אדום = מתחת ל-50%</span>.
+          ערכים סביב 50% הם ממצא כן: כיוון השוק לטווח קצר קשה מאוד לחיזוי.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-center font-mono text-xs">
@@ -431,7 +439,10 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
             <tbody>
               {data.models.map((model) => (
                 <tr key={`hz-${model.modelId}`} className="border-t border-slate-800">
-                  <td className="text-right font-sans text-slate-300 py-2 px-2">{model.modelName}</td>
+                  <td className="text-right font-sans text-slate-300 py-2 px-2">
+                    {model.modelName}
+                    {model.metrics.sensitivity === 1 && <span className="text-amber-500"> *</span>}
+                  </td>
                   {["1", "3", "7", "30"].map((h) => {
                     const acc = model.horizonAccuracy?.[h];
                     return (
@@ -446,9 +457,38 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
                   })}
                 </tr>
               ))}
+              {data.evaluationInfo && (
+                <tr className="border-t-2 border-slate-700 bg-slate-950/60">
+                  <td className="text-right font-sans text-slate-400 py-2 px-2">
+                    בסיס נאיבי: "תמיד עלייה"
+                    <InfoTip text="אחוז הימים שבהם המחיר באמת עלה באופק הזה, בסט הבדיקה. זה הדיוק שהיה מקבל מי שחוזה עלייה בכל יום, בלי שום מודל. מודל מוסיף ערך רק אם הוא מעל המספר הזה." />
+                  </td>
+                  {["1", "3", "7", "30"].map((h) => {
+                    const b = data.evaluationInfo!.horizonBaseline[h];
+                    return (
+                      <td key={h} className="py-2 px-2 text-slate-400">
+                        {b ? `${(b.upShare * 100).toFixed(1)}%` : "-"}
+                      </td>
+                    );
+                  })}
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
+        {data.models.some((m) => m.metrics.sensitivity === 1) && (
+          <p className="text-[10px] text-amber-500/90 font-sans mt-3 leading-relaxed">
+            * מודל שחזה "עלייה" בכל תקופת הבדיקה (Recall = 1.0). במקרה כזה הדיוק שלו שווה בדיוק לשורת הבסיס הנאיבי,
+            כלומר הוא אינו מוסיף מידע מעבר לניחוש "תמיד עלייה". זהו דיווח שקוף ולא תקלה.
+          </p>
+        )}
+        {data.evaluationInfo && (
+          <p className="text-[10px] text-slate-500 font-sans mt-1">
+            גודל סט הבדיקה: {data.evaluationInfo.testSize} ימים (20% אחרונים, מחוץ למדגם). מספר דגימות לאופק:
+            {" "}{["1", "3", "7", "30"].map((h) => `${h} ימים: ${data.evaluationInfo!.horizonBaseline[h]?.samples ?? "-"}`).join(" | ")}.
+            באופק 30 יום יש פחות דגימות, ולכן אי-הוודאות במדידה גדולה יותר.
+          </p>
+        )}
       </div>
 
       {/* Hyperparameter Tuning & Feature Ablation */}
@@ -462,6 +502,15 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
                 אופטימיזציית היפרפרמטרים
                 <InfoTip text="לכל מודל בוצע חיפוש על מרחב פרמטרים, עם בחירה לפי ציון Brier (איכות ההסתברות, נמוך = טוב) על פיצול ולידציה כרונולוגי בתוך סט האימון בלבד, ללא דליפה לסט הבדיקה." />
               </h3>
+              <p className="text-xs text-slate-400 leading-relaxed mb-2 font-sans">
+                <strong className="text-slate-300">מה זה?</strong> היפרפרמטרים הם "כפתורי הכיוון" של מודל, למשל כמה עצים לבנות וכמה אגרסיבי כל צעד למידה.
+                במקום לקבוע אותם ידנית, המערכת ניסתה את כל הצירופים (Grid Search) ובחרה את הצירוף הטוב ביותר.
+              </p>
+              <p className="text-xs text-slate-400 leading-relaxed mb-4 font-sans">
+                <strong className="text-slate-300">איך נבחר המנצח?</strong> לפי ציון <span className="font-mono">Brier</span>, שמודד את איכות ההסתברות
+                (ממוצע ריבועי המרחק בין ההסתברות שהמודל נתן לבין מה שקרה בפועל). נמוך יותר = טוב יותר; 0.25 שקול לניחוש 50/50.
+                הבדיקה נעשתה על פיצול ולידציה כרונולוגי בתוך סט האימון בלבד, כך שסט הבדיקה נשאר "נקי" לחלוטין.
+              </p>
               <div className="space-y-3">
                 {data.tuning.map((t) => (
                   <div key={t.modelId} className="bg-slate-950 border border-slate-850 rounded-xl p-3.5">
@@ -495,6 +544,15 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
                 ברירת מאפיינים: ניתוח אבלציה (Leave-One-Out)
                 <InfoTip text="המודל אומן מחדש כאשר בכל פעם הוסר מאפיין אחד, ונמדדה הפגיעה בציון Brier על סט הולידציה. דלתא חיובית = המאפיין תורם; קרוב לאפס = תרומה שולית. תרומות שוליות הן ממצא כן, עקבי עם הקושי הכללי בחיזוי." />
               </h3>
+              <p className="text-xs text-slate-400 leading-relaxed mb-2 font-sans">
+                <strong className="text-slate-300">מה זה?</strong> בדיקה כמה כל מאפיין (RSI, מדד הפחד וכו') באמת תורם לתחזית:
+                מאמנים את המודל מחדש בלי מאפיין אחד בכל פעם, ומודדים כמה הביצועים נפגעו.
+              </p>
+              <p className="text-xs text-slate-400 leading-relaxed mb-3 font-sans">
+                <strong className="text-slate-300">איך קוראים?</strong> <span className="font-mono">ΔBrier</span> חיובי = בלי המאפיין המודל נחלש,
+                כלומר המאפיין תורם. שלילי = המודל דווקא השתפר בלעדיו. קרוב לאפס = תרומה שולית.
+                התוצאה בפועל, תרומות שוליות לכל המאפיינים, היא ממצא מחקרי כן: אף מאפיין בודד אינו מחזיק כוח ניבוי משמעותי לטווח קצר.
+              </p>
               <p className="text-[10px] text-slate-500 font-mono mb-3" style={{ direction: "ltr", textAlign: "left" }}>
                 Full model: Brier {data.featureAblation.fullBrier?.toFixed(4)} | Acc {(data.featureAblation.fullAccuracy * 100).toFixed(1)}%
               </p>

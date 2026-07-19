@@ -15,7 +15,8 @@ import {
   ForecastPoint,
   ModelTuning,
   FeatureAblationEntry,
-  FeatureAblationReport
+  FeatureAblationReport,
+  EvaluationInfo
 } from "./src/types";
 
 dotenv.config();
@@ -789,6 +790,7 @@ async function getPolymarketState(currentBtcPrice: number, fallbackProb: number)
 interface ResearchDiagnostics {
   tuning: ModelTuning[];
   featureAblation: FeatureAblationReport;
+  evaluation?: EvaluationInfo;
 }
 // Filled on every evaluateModels() run; served by /api/market-status
 let lastDiagnostics: ResearchDiagnostics | null = null;
@@ -856,6 +858,10 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
   for (const mId of Object.keys(horizonCounts)) {
     for (const h of HORIZONS) horizonCounts[mId][h] = { correct: 0, total: 0 };
   }
+  // Naive "always UP" baseline per horizon: the share of samples whose price actually rose.
+  // A model is only interesting if it beats this number on the SAME samples.
+  const baselineCounts: { [h: number]: { ups: number; total: number } } = {};
+  for (const h of HORIZONS) baselineCounts[h] = { ups: 0, total: 0 };
 
   // Run over the test set. The 7-day window remains the primary target for the headline
   // confusion-matrix metrics (unchanged sample set); shorter/longer horizons are scored too.
@@ -876,6 +882,9 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
     for (const h of HORIZONS) {
       if (i + h >= testSet.length) continue;
       const actualUp = testSet[i + h].price > current.price ? 1 : 0;
+
+      baselineCounts[h].ups += actualUp;
+      baselineCounts[h].total++;
 
       const dtPred = dtPredByH.get(h)!;
       if (dtPred === actualUp) horizonCounts.xgboost[h].correct++;
@@ -920,6 +929,19 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
     }
     return out;
   };
+
+  // Publish evaluation context (test size + per-horizon naive baseline) for the dashboard
+  const horizonBaseline: EvaluationInfo["horizonBaseline"] = {};
+  for (const h of HORIZONS) {
+    const b = baselineCounts[h];
+    horizonBaseline[String(h)] = {
+      samples: b.total,
+      upShare: b.total ? Math.round((b.ups / b.total) * 1000) / 1000 : 0
+    };
+  }
+  if (lastDiagnostics) {
+    lastDiagnostics.evaluation = { testSize: testSet.length, horizonBaseline };
+  }
 
   // Calculate Metrics helper
   const calcMetrics = (tp: number, fp: number, tn: number, fn: number) => {
@@ -1529,7 +1551,8 @@ app.get("/api/market-status", async (req, res) => {
       accuracyHistory,
       forecast,
       tuning: lastDiagnostics?.tuning,
-      featureAblation: lastDiagnostics?.featureAblation
+      featureAblation: lastDiagnostics?.featureAblation,
+      evaluationInfo: lastDiagnostics?.evaluation
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
