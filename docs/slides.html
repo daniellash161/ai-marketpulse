@@ -91,6 +91,12 @@
   .step span{font-size:.84em;color:var(--muted);font-weight:300;line-height:1.5}
 
   .mono{font-family:Menlo,Consolas,monospace;direction:ltr;display:inline-block}
+
+  .tune-row{display:flex;justify-content:space-between;align-items:center;gap:1em;
+    border-top:1px solid var(--border);padding:.55em 0;font-size:.85em}
+  .tune-row:first-of-type{border-top:none}
+  .tune-row>span:first-child{color:var(--muted);font-weight:500;white-space:nowrap}
+  .tune-row .mono{font-size:.92em;text-align:left}
 </style>
 </head>
 <body>
@@ -220,18 +226,22 @@
   <!-- 7. אופטימיזציה -->
   <section class="slide">
     <h2>אופטימיזציית היפרפרמטרים: לא ניחוש, חיפוש.</h2>
-    <div style="max-width:84%">
-      <table>
-        <tr><th>מודל</th><th>מרחב חיפוש</th><th>נבחר</th><th>ולידציה</th></tr>
-        <tr><td>XGBoost</td><td class="dim mono">rounds 15/25/40 × lr 0.1/0.2/0.3</td>
-            <td class="mono mid">rounds=15, lr=0.1</td><td class="mono">Brier 0.252 · Acc 51.3%</td></tr>
-        <tr><td>ARIMA</td><td class="dim mono">window 60/100/150</td>
-            <td class="mono mid">window=150</td><td class="mono">Acc 52.5%</td></tr>
-        <tr><td>Prophet / LSTM</td><td class="dim">פרמטרים קבועים מתועדים</td>
-            <td class="dim">ללא שינוי</td><td class="dim">עבודת המשך</td></tr>
-      </table>
+    <div class="cols" style="max-width:88%">
+      <div class="glass glow card">
+        <h3 class="accent">XGBoost · Grid Search</h3>
+        <div class="tune-row"><span>מה נבדק</span><span class="mono">rounds: 15 / 25 / 40 × lr: 0.1 / 0.2 / 0.3</span></div>
+        <div class="tune-row"><span>מה נבחר</span><span class="mono" style="color:var(--gold2);font-weight:700">rounds = 15, lr = 0.1</span></div>
+        <div class="tune-row"><span>תוצאת ולידציה</span><span class="mono">Brier 0.252 · Acc 51.3%</span></div>
+      </div>
+      <div class="glass glow card">
+        <h3 class="accent">ARIMA · בחירת חלון</h3>
+        <div class="tune-row"><span>מה נבדק</span><span class="mono">window: 60 / 100 / 150</span></div>
+        <div class="tune-row"><span>מה נבחר</span><span class="mono" style="color:var(--gold2);font-weight:700">window = 150</span></div>
+        <div class="tune-row"><span>תוצאת ולידציה</span><span class="mono">Acc 52.5%</span></div>
+      </div>
     </div>
-    <div class="banner" style="margin-top:1.3em;max-width:80%">
+    <p style="font-size:.8em;color:var(--muted);margin-top:.9em">Prophet ו-LSTM: פרמטרים קבועים מתועדים; הכוונון שלהם הוגדר כעבודת המשך.</p>
+    <div class="banner" style="margin-top:.9em;max-width:80%">
       ממצא כן: החיפוש בחר דווקא בקונפיגורציה השמרנית ביותר.
       אין בנתונים אות חזק שמצדיק מודל אגרסיבי, וזה עקבי עם שאר הממצאים.
     </div>
