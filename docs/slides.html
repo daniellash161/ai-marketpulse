@@ -97,6 +97,21 @@
   .tune-row:first-of-type{border-top:none}
   .tune-row>span:first-child{color:var(--muted);font-weight:500;white-space:nowrap}
   .tune-row .mono{font-size:.92em;text-align:left}
+
+  /* backtest bar chart */
+  .bt-chart{width:82%;max-width:82%;display:flex;flex-direction:column;gap:.55em}
+  .bt-row{display:flex;align-items:center;gap:.9em}
+  .bt-name{flex:0 0 30%;text-align:right;font-size:.82em;font-weight:600}
+  .bt-name small{color:var(--muted);font-weight:400}
+  .bt-track{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
+    border-radius:8px;height:1.55em;overflow:hidden;position:relative;direction:ltr}
+  .bt-bar{height:100%;border-radius:7px;
+    background:linear-gradient(90deg,var(--gold),var(--gold2));
+    box-shadow:0 0 14px rgba(217,164,65,.25)}
+  .bt-base{background:linear-gradient(90deg,#2e8b6a,#4ade9c);box-shadow:0 0 14px rgba(74,222,156,.2)}
+  .bt-val{flex:0 0 4.2em;font-family:Menlo,Consolas,monospace;font-size:.85em;font-weight:700;text-align:left;direction:ltr}
+  .bt-none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:.72em;direction:rtl}
 </style>
 </head>
 <body>
@@ -332,26 +347,49 @@
 
   <!-- Backtesting -->
   <section class="slide">
-    <h2>Backtesting: אסטרטגיות מול קנה-והחזק, על נתוני אמת.</h2>
-    <div style="max-width:86%">
-      <table>
-        <tr><th>אסטרטגיה</th><th>תשואה כוללת</th><th>ירידה מקס'</th><th>Sharpe</th><th>עסקאות</th></tr>
-        <tr style="background:rgba(255,255,255,.04)"><td class="dim">קנה והחזק (בסיס)</td>
-          <td class="good">+287.1%</td><td class="low">52.9%-</td><td class="mono">1.05</td><td class="mono dim">1</td></tr>
-        <tr><td>חציית ממוצע נע MA150</td><td class="mid">+209.4%</td><td class="good">26.3%-</td><td class="mono mid">1.05</td><td class="mono dim">18</td></tr>
-        <tr><td>קניית שפל (RSI &lt; 30)</td><td>+31.0%</td><td class="low">47.0%-</td><td class="mono">0.40</td><td class="mono dim">15</td></tr>
-        <tr><td>השקעה מחזורית (DCA, בסיס)</td><td>+27.0%</td><td class="low">50.3%-</td><td class="mono">0.37</td><td class="mono dim">186</td></tr>
-        <tr><td>פחד/חמדנות קיצוני</td><td>+22.1%</td><td class="low">52.9%-</td><td class="mono">0.34</td><td class="mono dim">2</td></tr>
-        <tr><td>אנסמבל ML</td><td class="dim">0 עסקאות</td><td class="dim">-</td><td class="dim">-</td><td class="mono dim">0</td></tr>
-      </table>
-      <p style="font-size:.72em;color:var(--muted);margin-top:.7em;text-align:right">
-        סימולציה על נתוני Binance אמיתיים מ-2023-01-01, ללא עמלות. תוצאות עבר אינן מבטיחות ביצועים עתידיים.
-      </p>
+    <h2>Backtesting: כמה הרוויחה כל אסטרטגיה מ-2023?</h2>
+    <div class="bt-chart">
+      <div class="bt-row">
+        <span class="bt-name">קנה והחזק <small>(הבסיס להשוואה)</small></span>
+        <div class="bt-track"><div class="bt-bar bt-base" style="width:100%"></div></div>
+        <span class="bt-val good">287%+</span>
+      </div>
+      <div class="bt-row">
+        <span class="bt-name">חציית ממוצע נע MA150</span>
+        <div class="bt-track"><div class="bt-bar" style="width:73%"></div></div>
+        <span class="bt-val mid">209%+</span>
+      </div>
+      <div class="bt-row">
+        <span class="bt-name">קניית שפל (RSI נמוך)</span>
+        <div class="bt-track"><div class="bt-bar" style="width:11%"></div></div>
+        <span class="bt-val">31%+</span>
+      </div>
+      <div class="bt-row">
+        <span class="bt-name">השקעה מחזורית (DCA)</span>
+        <div class="bt-track"><div class="bt-bar" style="width:9%"></div></div>
+        <span class="bt-val">27%+</span>
+      </div>
+      <div class="bt-row">
+        <span class="bt-name">פחד/חמדנות קיצוני</span>
+        <div class="bt-track"><div class="bt-bar" style="width:8%"></div></div>
+        <span class="bt-val">22%+</span>
+      </div>
+      <div class="bt-row">
+        <span class="bt-name">אנסמבל ה-ML</span>
+        <div class="bt-track"><span class="bt-none">לא ביצע אף עסקה (שמרני)</span></div>
+        <span class="bt-val dim">0%</span>
+      </div>
     </div>
-    <div class="banner" style="margin-top:.8em;max-width:82%">
-      גם כאן, בכנות: אף אסטרטגיה לא היכתה את קנה-והחזק בתשואה בשוק עולה.
-      MA150 השיגה Sharpe זהה עם כמחצית הסיכון, והאנסמבל נותר שמרני ולא ביצע עסקאות.
+    <div class="cols" style="max-width:76%;margin-top:1em">
+      <div class="glass card" style="padding:.8em 1.2em">
+        <p style="font-size:.82em;margin:0"><b class="accent">אבל שימו לב לסיכון:</b>
+        קנה-והחזק ספג ירידה של עד 53% בדרך. MA150 השיגה כמעט אותה תשואה עם ירידה של 26% בלבד, חצי מהסיכון.</p>
+      </div>
     </div>
+    <div class="banner" style="margin-top:.9em;max-width:80%">
+      המסקנה הכנה: בשוק עולה קשה לנצח את "פשוט להחזיק". הערך של אסטרטגיה חכמה הוא בהקטנת הסיכון, לא בהגדלת הרווח.
+    </div>
+    <p style="font-size:.68em;color:var(--muted);margin-top:.8em">סימולציה על נתוני Binance אמיתיים, ינואר 2023 עד היום, ללא עמלות. תוצאות עבר אינן מבטיחות דבר.</p>
   </section>
 
   <!-- פולימרקט ומסקנות -->
@@ -379,26 +417,28 @@
 
   <!-- מגבלות ועבודה עתידית -->
   <section class="slide">
-    <h2>מגבלות ידועות ועבודה עתידית. כי כנות זה גם זה.</h2>
-    <div class="cols" style="max-width:90%">
+    <h2>מה עוד לא מושלם, ולאן ממשיכים.</h2>
+    <div class="cols" style="max-width:88%">
       <div class="glass card">
-        <h3 class="accent">מה אנחנו יודעים שחסר</h3>
+        <h3 class="accent">מגבלות שאנחנו מצהירים עליהן</h3>
         <ul>
-          <li>קושי מובנה בחיזוי שוק יעיל; אין מובהקות סטטיסטית פורמלית (p-values, מרווחי סמך) בשלב זה.</li>
-          <li>המאפיין ההיסטורי של Polymarket הוא פרוקסי מוצהר.</li>
-          <li>מדגם קטן יחסית באופק 30 יום; תלות ב-API חיצוניים.</li>
-          <li>Prophet ו-LSTM עדיין ללא כוונון היפרפרמטרים.</li>
+          <li>לחזות שוק זה קשה, והתוצאות עדיין לא הוכחו כמובהקות סטטיסטית.</li>
+          <li>נתוני העבר של פולימרקט הם קירוב מחושב, לא נתונים מקוריים.</li>
+          <li>שניים מהמודלים (Prophet ו-LSTM) עוד לא עברו כוונון.</li>
         </ul>
       </div>
       <div class="glass glow card">
-        <h3 class="accent">לאן ממשיכים</h3>
+        <h3 class="accent">הצעדים הבאים</h3>
         <ul>
-          <li>איסוף היסטוריית Polymarket אמיתית ובדיקה חוזרת של ההשערה.</li>
-          <li>אימות סטטיסטי מתקדם: walk-forward מלא ומרווחי סמך.</li>
-          <li>הרחבת אסטרטגיות ה-Backtesting וכוונון כל המודלים.</li>
-          <li>מסחר אוטומטי וחיבור ארנק נשארים מחוץ להיקף, מטעמי אתיקה.</li>
+          <li>לאסוף נתוני פולימרקט אמיתיים ולבדוק שוב.</li>
+          <li>להוסיף בדיקות סטטיסטיות חזקות יותר.</li>
+          <li>לכוונן את כל המודלים ולהוסיף אסטרטגיות השוואה.</li>
+          <li>בלי מסחר אוטומטי ובלי חיבור ארנק. זו החלטה, לא מגבלה.</li>
         </ul>
       </div>
+    </div>
+    <div class="banner" style="margin-top:1.2em;max-width:76%">
+      פרויקט שמציג גם את החולשות שלו הוא פרויקט שאפשר לסמוך על החוזקות שלו.
     </div>
   </section>
 
