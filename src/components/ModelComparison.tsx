@@ -34,10 +34,10 @@ interface ModelComparisonProps {
 
 // Plain-language explanation per model, shown in a hover tooltip
 const MODEL_INFO: Record<string, string> = {
-  lstm: "רשת נוירונים חוזרת (RNN) — לומדת רצפים. מסתכלת על רצף הימים האחרונים (מחיר, RSI, פולימרקט) ומנסה לזהות תבנית שמובילה לעלייה או ירידה.",
-  xgboost: "עצי החלטה מועצמים (Gradient Boosting) — בונה הרבה 'כללי אם-אז' קטנים על המדדים (RSI, פחד/חמדנות, תזרים) ומשלב אותם לתחזית אחת חזקה.",
-  arima: "מודל סטטיסטי קלאסי לסדרות זמן — מנבא את התשואה הבאה לפי התשואות של 2 הימים האחרונים (מומנטום מול חזרה לממוצע).",
-  prophet: "מודל מגמה + עונתיות — מזהה את הכיוון הכללי (טרנד) ודפוסים שחוזרים (למשל לפי יום בשבוע) וממשיך אותם קדימה."
+  lstm: "רשת נוירונים חוזרת מסוג Elman (מימוש עצמאי, ללא שערי LSTM) — לומדת רצפים. מסתכלת על רצף הימים האחרונים (מחיר, RSI, פולימרקט) ומנסה לזהות תבנית שמובילה לעלייה או ירידה.",
+  xgboost: "עצי החלטה מועצמים בעומק 1 בסגנון XGBoost (מימוש עצמאי) — בונה הרבה 'כללי אם-אז' קטנים על המדדים (RSI, פחד/חמדנות, תזרים) ומשלב אותם לתחזית אחת.",
+  arima: "מימוש עצמאי של ARIMA(2,1,0) עם אמידת OLS — מנבא את התשואה הבאה לפי התשואות של 2 הימים האחרונים (מומנטום מול חזרה לממוצע).",
+  prophet: "מודל אדיטיבי בסגנון Prophet (מימוש עצמאי): מגמה לינארית + עונתיות שבועית, ממשיך אותן קדימה."
 };
 
 // Small help icon with a hover tooltip explaining a term in plain language
@@ -71,7 +71,7 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
 
   // Per-model line visibility for the accuracy chart (click a legend chip to toggle)
   const ACC_MODELS = [
-    { key: "M-LSTM", color: "#10b981" },
+    { key: "RNN", color: "#10b981" },
     { key: "XGBoost", color: "#f59e0b" },
     { key: "ARIMA", color: "#3b82f6" },
     { key: "Prophet", color: "#a855f7" }
@@ -164,7 +164,7 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
     return data.accuracyHistory.map((point) => ({
       date: point.date,
       "מחיר ביטקוין": point.price,
-      "M-LSTM": point.lstm,
+      "RNN": point.lstm,
       "XGBoost": point.xgboost,
       "ARIMA": point.arima,
       "Prophet": point.prophet
@@ -197,7 +197,7 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
               <h3 className="text-md font-bold text-white font-sans flex items-center gap-1.5">מודל משולב חכם (Ensemble ML Forecast) <InfoTip text="במקום לסמוך על מודל אחד, משקללים את התחזיות של כל 4 המודלים יחד. כל מודל מקבל 'משקל' לפי כמה דייק בעבר — וכך מתקבלת תחזית יציבה ומאוזנת יותר." /></h3>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed mb-4 font-sans">
-              תחזית משוקללת המשלבת רשתות קשר (LSTM), עצי החלטה (XGBoost), ומודלים סטטיסטיים. 
+              תחזית משוקללת המשלבת רשת חוזרת (RNN), עצים מועצמים (בסגנון XGBoost) ומודלים סטטיסטיים.
               שנה את משקל המודלים למטה כדי לצפות בשינויים בזמן אמת.
             </p>
 
@@ -227,11 +227,12 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Scale className="w-5 h-5 text-amber-500" />
-              <h3 className="text-md font-bold text-white font-sans flex items-center gap-1.5">פער ארביטראז' (Polymarket Arbitrage Gap) <InfoTip text="הפער בין התחזית של המודל שלנו לבין מה שהשוק האמיתי (פולימרקט) מתמחר. פער גדול = אולי הזדמנות: או שהמודל יודע משהו שהשוק עוד לא, או להפך. בכפוף לעלויות ונזילות." /></h3>
+              <h3 className="text-md font-bold text-white font-sans flex items-center gap-1.5">פער הסתברויות מול פולימרקט (Model vs Market Gap) <InfoTip text="הפער בין הסתברות המודל שלנו לבין ההסתברות המרומזת בשוק הביטקוין הפעיל בפולימרקט. חשוב: השוק הנבחר אינו בהכרח מוגדר על אותו אירוע ואותו אופק זמן כמו יעד המודל, ולכן זהו פער תיאורי בין שתי הסתברויות, לא הזדמנות ארביטראז'." /></h3>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed mb-4 font-sans">
-              פערים בין הסתברות מודל ה-ML שלנו לבין שוק הניחושים של פולימרקט. 
-              כשיש פער גבוה, נוצרת הזדמנות לנצל תמחור חסר בחוזים.
+              השוואה תיאורית בין הסתברות מודל ה-ML שלנו לבין ההסתברות המרומזת בשוק הניבויים של פולימרקט.
+              פער גדול מעיד על אי-הסכמה בין המודל לחוכמת ההמונים, אך אינו בהכרח הזדמנות מסחר: השוק
+              והמודל אינם מוגדרים בהכרח על אותו אירוע ואותו אופק זמן.
             </p>
 
             <div className="grid grid-cols-2 gap-4 text-center">
@@ -317,7 +318,7 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
                   return [`${value}%`, name];
                 }}
               />
-              {!hiddenLines["M-LSTM"] && <Line yAxisId="accuracy" type="monotone" dataKey="M-LSTM" stroke="#10b981" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />}
+              {!hiddenLines["RNN"] && <Line yAxisId="accuracy" type="monotone" dataKey="RNN" stroke="#10b981" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />}
               {!hiddenLines["XGBoost"] && <Line yAxisId="accuracy" type="monotone" dataKey="XGBoost" stroke="#f59e0b" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />}
               {!hiddenLines["ARIMA"] && <Line yAxisId="accuracy" type="monotone" dataKey="ARIMA" stroke="#3b82f6" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />}
               {!hiddenLines["Prophet"] && <Line yAxisId="accuracy" type="monotone" dataKey="Prophet" stroke="#a855f7" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />}
@@ -417,7 +418,8 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
         <p className="text-xs text-slate-400 leading-relaxed mb-2 font-sans">
           <strong className="text-slate-300">מה בודקים כאן?</strong> כל מודל חוזה "עלייה" או "ירידה". הטבלה מודדת כמה אחוז מהתחזיות היו נכונות
           כשבודקים את המחיר בפועל אחרי יום, 3 ימים, שבוע וחודש, על נתונים שהמודל לא ראה באימון (סט הבדיקה).
-          עבור XGBoost אומן מודל נפרד לכל אופק; שאר המודלים נותנים אות כיווני אחד שנבחן מול כל אופק.
+          חשוב: רק מודל ה-Gradient Boosting אומן מחדש עם תווית ייעודית לכל אופק. עבור ARIMA, Prophet ו-RNN
+          נבדקה התאמת האות הכיווני הקיים (שאומן ל-7 ימים) לתוצאות באופקים השונים; אין לראות בכך מודל שאומן במיוחד לאותו אופק.
         </p>
         <p className="text-xs text-slate-400 leading-relaxed mb-4 font-sans">
           <strong className="text-slate-300">איך קוראים את הטבלה?</strong> שורת "בסיס נאיבי" מציגה מה היה הדיוק של מי שפשוט אומר "עלייה" כל יום.
@@ -486,7 +488,8 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
           <p className="text-[10px] text-slate-500 font-sans mt-1">
             גודל סט הבדיקה: {data.evaluationInfo.testSize} ימים (20% אחרונים, מחוץ למדגם). מספר דגימות לאופק:
             {" "}{["1", "3", "7", "30"].map((h) => `${h} ימים: ${data.evaluationInfo!.horizonBaseline[h]?.samples ?? "-"}`).join(" | ")}.
-            באופק 30 יום יש פחות דגימות, ולכן אי-הוודאות במדידה גדולה יותר.
+            שימו לב: התצפיות חופפות (חלונות מתגלגלים), ולכן מספר התצפיות הבלתי-תלויות קטן משמעותית, בעיקר באופק 30 יום.
+            ללא מרווחי סמך אין להסיק שפער שנמצא הוא יציב.
           </p>
         )}
       </div>
@@ -500,23 +503,24 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
               <h3 className="text-md font-bold text-white mb-2 font-sans flex items-center gap-2">
                 <Sliders className="w-5 h-5 text-amber-500" />
                 אופטימיזציית היפרפרמטרים
-                <InfoTip text="לכל מודל בוצע חיפוש על מרחב פרמטרים, עם בחירה לפי ציון Brier (איכות ההסתברות, נמוך = טוב) על פיצול ולידציה כרונולוגי בתוך סט האימון בלבד, ללא דליפה לסט הבדיקה." />
+                <InfoTip text="אופטימיזציה ממוקדת לחלק מהמודלים: ל-Gradient Boosting בוצע Grid Search עם בחירה לפי ציון Brier; ל-ARIMA נבחר חלון אמידה לפי דיוק. שניהם על פיצול ולידציה כרונולוגי בתוך סט האימון בלבד. Prophet ו-RNN פועלים עם פרמטרים קבועים ומתועדים." />
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed mb-2 font-sans">
                 <strong className="text-slate-300">מה זה?</strong> היפרפרמטרים הם "כפתורי הכיוון" של מודל, למשל כמה עצים לבנות וכמה אגרסיבי כל צעד למידה.
-                במקום לקבוע אותם ידנית, המערכת ניסתה את כל הצירופים (Grid Search) ובחרה את הצירוף הטוב ביותר.
+                בוצעה אופטימיזציה ממוקדת לשני מודלים: ל-Gradient Boosting נוסו כל הצירופים (Grid Search) ול-ARIMA נבחר חלון האמידה.
+                Prophet ו-RNN פועלים עם פרמטרים קבועים ומתועדים, וכוונון מלא שלהם הוגדר כעבודה עתידית.
               </p>
               <p className="text-xs text-slate-400 leading-relaxed mb-4 font-sans">
-                <strong className="text-slate-300">איך נבחר המנצח?</strong> לפי ציון <span className="font-mono">Brier</span>, שמודד את איכות ההסתברות
-                (ממוצע ריבועי המרחק בין ההסתברות שהמודל נתן לבין מה שקרה בפועל). נמוך יותר = טוב יותר; 0.25 שקול לניחוש 50/50.
-                הבדיקה נעשתה על פיצול ולידציה כרונולוגי בתוך סט האימון בלבד, כך שסט הבדיקה נשאר "נקי" לחלוטין.
+                <strong className="text-slate-300">איך נבחר המנצח?</strong> ל-Gradient Boosting לפי ציון <span className="font-mono">Brier</span>, שמודד את איכות ההסתברות
+                (ממוצע ריבועי המרחק בין ההסתברות שהמודל נתן לבין מה שקרה בפועל; נמוך יותר = טוב יותר, 0.25 שקול לניחוש 50/50).
+                ל-ARIMA לפי דיוק כיווני. שתי הבחירות נעשו על פיצול ולידציה כרונולוגי בתוך סט האימון בלבד.
               </p>
               <div className="space-y-3">
                 {data.tuning.map((t) => (
                   <div key={t.modelId} className="bg-slate-950 border border-slate-850 rounded-xl p-3.5">
                     <div className="flex justify-between items-center mb-1.5">
                       <span className="text-xs font-bold text-slate-200 font-sans">
-                        {t.modelId === "xgboost" ? "XGBoost (עצים מועצמים)" : t.modelId === "arima" ? "ARIMA" : t.modelId}
+                        {t.modelId === "xgboost" ? "Gradient Boosting (בסגנון XGBoost)" : t.modelId === "arima" ? "ARIMA" : t.modelId}
                       </span>
                       <span className="text-[10px] text-slate-500 font-mono">
                         Val Acc: {(t.validationAccuracy * 100).toFixed(1)}%
@@ -580,8 +584,11 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
           <Scale className="w-5 h-5 text-amber-500" />
           מתודולוגיית תיקוף והערכת איכות המדדים (Model Evaluation Methodology)
         </h3>
-        <p className="text-xs text-slate-350 leading-relaxed mb-4">
-          כחלק ממתודולוגיית התיקוף הקשיחה של המערכת, הנתונים ההיסטוריים מחולקים באופן קבוע ל-<strong>80% אימון (Train Set)</strong> ו-<strong>20% לבדיקה מחוץ למדגם (Out-of-Sample Test Set)</strong>. תהליך זה מבטיח כי כל מדדי האיכות שלפניך מבוססים על נתוני אמת שהמודל לא נחשף אליהם מעולם, ובכך נמנע לחלוטין כשל של התאמת-יתר (Overfitting).
+        <p className="text-xs text-slate-350 leading-relaxed mb-2">
+          כחלק ממתודולוגיית התיקוף של המערכת, הנתונים ההיסטוריים מחולקים כרונולוגית ל-<strong>80% אימון (Train Set)</strong> ו-<strong>20% לבדיקה מחוץ למדגם (Out-of-Sample Test Set)</strong>. מדדי האיכות מבוססים על נתונים שהמודלים לא נחשפו אליהם באימון. משקלי האנסמבל נלמדים על פרוסת ולידציה נפרדת (60/20/20), כך שסט הבדיקה הסופי אינו משתתף גם בלמידת המשקלים.
+        </p>
+        <p className="text-[11px] text-slate-500 leading-relaxed mb-4">
+          שקיפות מלאה: כל המודלים (Gradient Boosting בסגנון XGBoost, ARIMA(2,1,0), מודל אדיטיבי בסגנון Prophet ו-RNN מסוג Elman) מומשו באופן עצמאי ב-TypeScript לצורך הדגמה לימודית. אלו מימושים מצומצמים המבוססים על עקרונות המודלים המקוריים, לא הספריות הרשמיות המלאות.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -618,7 +625,7 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
                 מודל אופטימיזציית מטא-למידה (SGD Ensemble Meta-Optimizer)
               </h3>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed font-sans text-right dir-rtl">
-                מודל למידת מכונה מסוג Stacked Regressor הלומד בצורה אקטיבית את משקלי ה-Ensemble האופטימליים. המודל מתאמן באמצעות אלגוריתם Stochastic Gradient Descent (SGD) על גבי ההיסטוריה מחוץ למדגם (Out-of-Sample predictions), במטרה למזער את פונקציית השגיאה הריבועית (MSE Loss) של תחזית העל הסופית.
+                מודל מטא-למידה הלומד את משקלי ה-Ensemble: כמה משקל לתת לכל אחד מארבעת מודלי הבסיס בשקלול התחזית הסופית. האימון נעשה באלגוריתם Stochastic Gradient Descent (SGD) על פרוסת ולידציה כרונולוגית ייעודית (מודלי הבסיס אומנו על 60% הראשונים, המשקלים נלמדים על ה-20% שאחריהם), כך שסט הבדיקה הסופי אינו משתתף בלמידת המשקלים.
               </p>
             </div>
 
@@ -700,7 +707,7 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
                       labelStyle={{ color: '#94a3b8', fontWeight: 'bold' }}
                       formatter={(v: any) => `${Math.round(Number(v) * 100)}%`}
                     />
-                    <Line type="monotone" dataKey="weights.lstm" name="M-LSTM" stroke="#10b981" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" dataKey="weights.lstm" name="RNN" stroke="#10b981" strokeWidth={1.5} dot={false} />
                     <Line type="monotone" dataKey="weights.xgboost" name="XGBoost" stroke="#f59e0b" strokeWidth={1.5} dot={false} />
                     <Line type="monotone" dataKey="weights.arima" name="ARIMA" stroke="#3b82f6" strokeWidth={1.5} dot={false} />
                     <Line type="monotone" dataKey="weights.prophet" name="Prophet" stroke="#a855f7" strokeWidth={1.5} dot={false} />

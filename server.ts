@@ -981,7 +981,7 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
   return [
     {
       modelId: "lstm",
-      modelName: "M-LSTM / RNN Recurrent Network",
+      modelName: "RNN (Elman) Recurrent Network",
       type: "ML",
       prediction: lstmLatest.direction,
       probability: lstmLatest.probability,
@@ -995,7 +995,7 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
     },
     {
       modelId: "xgboost",
-      modelName: "XGBoost Classifier Ensembles",
+      modelName: "Gradient Boosting (XGBoost-style)",
       type: "ML",
       prediction: xgbProb > 0.5 ? "UP" : "DOWN",
       probability: Math.round(xgbProb * 100),
@@ -1015,7 +1015,7 @@ function evaluateModels(history: BitcoinDataPoint[]): ModelPrediction[] {
     },
     {
       modelId: "prophet",
-      modelName: "Prophet Additive Seasonality",
+      modelName: "Additive Model (Prophet-style)",
       type: "Time Series",
       prediction: prophetLatest.direction,
       probability: prophetLatest.probability,
@@ -1161,9 +1161,16 @@ function trainMetaModel(trainingData: TrainingSample[]): MetaModelStats {
 }
 
 function trainEnsembleMetaModel(history: BitcoinDataPoint[]): MetaModelStats {
-  const splitIndex = Math.floor(history.length * 0.8);
-  const trainSet = history.slice(0, splitIndex);
-  const testSet = history.slice(splitIndex);
+  // Chronological 60/20/20 split, so the FINAL 20% (the region evaluateModels scores
+  // on) is never touched here: base models are trained on the first 60%, and the SGD
+  // ensemble weights are learned from base-model predictions on the middle 20%
+  // (a dedicated validation slice). This keeps the final test region clean of any
+  // weight fitting (previously the weights were learned on the last 20% itself,
+  // which leaked the test region into the ensemble).
+  const trainEnd = Math.floor(history.length * 0.6);
+  const valEnd = Math.floor(history.length * 0.8);
+  const trainSet = history.slice(0, trainEnd);
+  const valSet = history.slice(trainEnd, valEnd);
 
   const dtModel = trainDecisionTree(trainSet);
   const arModel = solveARIMA(trainSet);
@@ -1172,20 +1179,20 @@ function trainEnsembleMetaModel(history: BitcoinDataPoint[]): MetaModelStats {
 
   const trainingData: TrainingSample[] = [];
 
-  for (let i = 15; i < testSet.length - 7; i++) {
-    const current = testSet[i];
-    const actualUp = testSet[i + 7].price > current.price ? 1 : 0;
+  for (let i = 15; i < valSet.length - 7; i++) {
+    const current = valSet[i];
+    const actualUp = valSet[i + 7].price > current.price ? 1 : 0;
 
     const dtPredVal = dtModel.predict(current);
 
-    const slicePrices = testSet.slice(i - 10, i + 1).map(x => x.price);
+    const slicePrices = valSet.slice(i - 10, i + 1).map(x => x.price);
     const arPredVal = arModel.predict(slicePrices);
     const arProb = arPredVal.probability / 100;
 
     const prPredVal = prModel.predict(new Date(current.date));
     const prProb = prPredVal.probability / 100;
 
-    const lsPredVal = runLSTM(testSet.slice(i - 15, i + 1));
+    const lsPredVal = runLSTM(valSet.slice(i - 15, i + 1));
     const lsProb = lsPredVal.probability / 100;
 
     trainingData.push({
@@ -1432,7 +1439,7 @@ function runBacktest(
     buy_the_dip: "קניית שפל (RSI < 30)",
     ma150_proximity: "חציית ממוצע נע MA150",
     fear_greed: "מדד פחד ותאוות בצע קיצוני",
-    poly_arbitrage: "ארביטראז' פולימרקט-ML",
+    poly_arbitrage: "פער הסתברויות פולימרקט-ML",
     ml_ensemble: "מודל למידת מכונה משולב (Ensemble)",
     buy_and_hold: "קנה והחזק (Buy & Hold)",
     dca: "השקעה מחזורית (DCA)"
@@ -1658,7 +1665,7 @@ function buildLocalReport(p: {
   const gap = ensemble.probability - polymarketProb;
   const arbText = Math.abs(gap) > 10
     ? `פער משמעותי של ${gap > 0 ? "+" : ""}${gap}% בין המודל לשוק. ${gap > 0 ? "המודל אופטימי יותר מהקונצנזוס — הזדמנות פוטנציאלית לצד ה-Yes" : "המודל פסימי יותר מהקונצנזוס — הזדמנות פוטנציאלית לצד ה-No"} (בכפוף לעלויות עסקה ונזילות).`
-    : `הפער (${gap > 0 ? "+" : ""}${gap}%) קטן — המודל והשוק בקונצנזוס יחסי, ואין אות ארביטראז' ברור.`;
+    : `הפער (${gap > 0 ? "+" : ""}${gap}%) קטן — המודל והשוק בקונצנזוס יחסי, ואין פער הסתברויות בולט.`;
 
   let backtestSection = "";
   if (strategyMetrics && typeof strategyMetrics.totalReturn === "number") {
@@ -1683,7 +1690,7 @@ ${modelLines}
 
 **תחזית-העל (Ensemble):** ${ensemble.prediction === "UP" ? "עלייה ↑" : "ירידה ↓"} בהסתברות משוקללת של **${ensemble.probability}%** לטווח 7 ימים, לפי המשקלים שאופטמו על-ידי מודל המטא-למידה (SGD).
 
-## 3. השוואה לפולימרקט וארביטראז'
+## 3. השוואה לפולימרקט: פער הסתברויות
 הסתברות המודל המשולב (${ensemble.probability}%) מול ההסתברות המרומזת בפולימרקט (${polymarketProb}%): ${arbText}
 
 ## 4. הערכת איכות המודלים

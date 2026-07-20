@@ -15,7 +15,7 @@ import { TrendingUp } from "lucide-react";
 import { MarketAnalysisResponse } from "../types";
 
 const FC_MODELS = [
-  { key: "lstm", label: "M-LSTM", color: "#10b981" },
+  { key: "lstm", label: "RNN", color: "#10b981" },
   { key: "xgboost", label: "XGBoost", color: "#f59e0b" },
   { key: "arima", label: "ARIMA", color: "#3b82f6" },
   { key: "prophet", label: "Prophet", color: "#a855f7" }
@@ -98,7 +98,7 @@ export default function ForecastChart({ data }: { data: MarketAnalysisResponse |
               <ReferenceLine x={todayDate} stroke="#64748b" strokeDasharray="4 4" label={{ value: "היום", fill: "#94a3b8", fontSize: 11, position: "insideTopRight" }} />
             )}
             {/* Per-model forecasts (hidden by default, toggle to show) */}
-            {!hidden.lstm && <Line type="monotone" dataKey="lstm" name="M-LSTM" stroke="#10b981" strokeWidth={1.5} dot={false} strokeDasharray="4 3" connectNulls />}
+            {!hidden.lstm && <Line type="monotone" dataKey="lstm" name="RNN" stroke="#10b981" strokeWidth={1.5} dot={false} strokeDasharray="4 3" connectNulls />}
             {!hidden.xgboost && <Line type="monotone" dataKey="xgboost" name="XGBoost" stroke="#f59e0b" strokeWidth={1.5} dot={false} strokeDasharray="4 3" connectNulls />}
             {!hidden.arima && <Line type="monotone" dataKey="arima" name="ARIMA" stroke="#3b82f6" strokeWidth={1.5} dot={false} strokeDasharray="4 3" connectNulls />}
             {!hidden.prophet && <Line type="monotone" dataKey="prophet" name="Prophet" stroke="#a855f7" strokeWidth={1.5} dot={false} strokeDasharray="4 3" connectNulls />}
