@@ -112,6 +112,21 @@
   .bt-val{flex:0 0 4.2em;font-family:Menlo,Consolas,monospace;font-size:.85em;font-weight:700;text-align:left;direction:ltr}
   .bt-none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     color:var(--muted);font-size:.72em;direction:rtl}
+
+  /* backtest leaderboard */
+  .lb{width:78%;display:flex;flex-direction:column;gap:.5em}
+  .lb-row{display:flex;align-items:center;gap:1.1em;background:var(--panel);
+    border:1px solid var(--border);border-radius:.9em;padding:.55em 1.1em}
+  .lb-name{flex:1;text-align:right;font-size:.9em;font-weight:700}
+  .lb-name small{color:var(--muted);font-weight:400}
+  .lb-money{flex:0 0 6em;font-family:Menlo,Consolas,monospace;font-size:1.15em;font-weight:700;
+    text-align:left;direction:ltr;color:var(--text)}
+  .lb-note{flex:0 0 40%;text-align:right;font-size:.74em;color:var(--muted);font-weight:300}
+  .lb-win{border-color:rgba(74,222,156,.45)}
+  .lb-win .lb-money{color:var(--green)}
+  .lb-smart{border-color:rgba(240,163,46,.55);box-shadow:0 0 20px rgba(240,163,46,.10)}
+  .lb-smart .lb-money{color:var(--gold2)}
+  .lb-dim{opacity:.65}
 </style>
 </head>
 <body>
@@ -250,12 +265,12 @@
       <div class="glass card">
         <h3><span class="num">80/20</span></h3>
         <ul><li>חלוקה כרונולוגית: 80% אימון, 20% בדיקה מחוץ למדגם (479 ימים).</li>
-        <li>בתוך האימון: פיצול ולידציה נוסף (80/20) לכוונון, כך שסט הבדיקה נשאר נקי.</li></ul>
+        <li>בתוך האימון: פיצול ולידציה נוסף לכוונון; משקלי האנסמבל נלמדים בחלוקת 60/20/20 נפרדת. סט הבדיקה לא משתתף באימון, בכוונון או בלמידת המשקלים.</li></ul>
       </div>
       <div class="glass card">
         <h3><span class="num">Brier</span></h3>
         <ul><li>מדד איכות ההסתברות: ממוצע ריבועי המרחק בין ההסתברות לתוצאה.</li>
-        <li>0.25 שקול לניחוש 50/50; נמוך יותר = טוב יותר. משמש כקריטריון הבחירה.</li></ul>
+        <li>0.25 שקול לניחוש 50/50; נמוך יותר = טוב יותר. משמש לבחירת פרמטרי ה-Gradient Boosting ולאבלציה.</li></ul>
       </div>
       <div class="glass card">
         <h3><span class="num">בסיס</span></h3>
@@ -347,49 +362,46 @@
 
   <!-- Backtesting -->
   <section class="slide">
-    <h2>Backtesting: כמה הרוויחה כל אסטרטגיה מ-2023?</h2>
-    <div class="bt-chart">
-      <div class="bt-row">
-        <span class="bt-name">קנה והחזק <small>(הבסיס להשוואה)</small></span>
-        <div class="bt-track"><div class="bt-bar bt-base" style="width:100%"></div></div>
-        <span class="bt-val good">287%+</span>
+    <h2>Backtesting: מה היה קורה ל-10,000 דולר?</h2>
+    <p class="sub" style="margin-bottom:1.1em">בדיקה לאחור (Backtest): מריצים כל אסטרטגיה על נתוני האמת מינואר 2023,
+      כאילו השקענו בה 10,000 דולר, ורואים מה יצא.</p>
+    <div class="lb">
+      <div class="lb-row lb-win">
+        <span class="lb-name">קנה והחזק <small>(פשוט לקנות ולחכות)</small></span>
+        <span class="lb-money">$38,790</span>
+        <span class="lb-note">אבל בדרך: ירידה של עד 53%</span>
       </div>
-      <div class="bt-row">
-        <span class="bt-name">חציית ממוצע נע MA150</span>
-        <div class="bt-track"><div class="bt-bar" style="width:73%"></div></div>
-        <span class="bt-val mid">209%+</span>
+      <div class="lb-row lb-smart">
+        <span class="lb-name">חציית ממוצע נע MA150</span>
+        <span class="lb-money">$30,940</span>
+        <span class="lb-note">ירידה של עד 26% בלבד, חצי מהסיכון</span>
       </div>
-      <div class="bt-row">
-        <span class="bt-name">קניית שפל (RSI נמוך)</span>
-        <div class="bt-track"><div class="bt-bar" style="width:11%"></div></div>
-        <span class="bt-val">31%+</span>
+      <div class="lb-row">
+        <span class="lb-name">קניית שפל (RSI נמוך)</span>
+        <span class="lb-money">$13,100</span>
+        <span class="lb-note">ירידה של עד 47%</span>
       </div>
-      <div class="bt-row">
-        <span class="bt-name">השקעה מחזורית (DCA)</span>
-        <div class="bt-track"><div class="bt-bar" style="width:9%"></div></div>
-        <span class="bt-val">27%+</span>
+      <div class="lb-row">
+        <span class="lb-name">השקעה מחזורית (DCA)</span>
+        <span class="lb-money">$12,730</span>
+        <span class="lb-note">ירידה של עד 50%</span>
       </div>
-      <div class="bt-row">
-        <span class="bt-name">פחד/חמדנות קיצוני</span>
-        <div class="bt-track"><div class="bt-bar" style="width:8%"></div></div>
-        <span class="bt-val">22%+</span>
+      <div class="lb-row">
+        <span class="lb-name">פחד/חמדנות קיצוני</span>
+        <span class="lb-money">$12,240</span>
+        <span class="lb-note">ירידה של עד 53%</span>
       </div>
-      <div class="bt-row">
-        <span class="bt-name">אנסמבל ה-ML</span>
-        <div class="bt-track"><span class="bt-none">לא ביצע אף עסקה (שמרני)</span></div>
-        <span class="bt-val dim">0%</span>
-      </div>
-    </div>
-    <div class="cols" style="max-width:76%;margin-top:1em">
-      <div class="glass card" style="padding:.8em 1.2em">
-        <p style="font-size:.82em;margin:0"><b class="accent">אבל שימו לב לסיכון:</b>
-        קנה-והחזק ספג ירידה של עד 53% בדרך. MA150 השיגה כמעט אותה תשואה עם ירידה של 26% בלבד, חצי מהסיכון.</p>
+      <div class="lb-row lb-dim">
+        <span class="lb-name">אנסמבל ה-ML</span>
+        <span class="lb-money">$10,000</span>
+        <span class="lb-note">לא ביצע אף עסקה, נשאר במזומן</span>
       </div>
     </div>
-    <div class="banner" style="margin-top:.9em;max-width:80%">
-      המסקנה הכנה: בשוק עולה קשה לנצח את "פשוט להחזיק". הערך של אסטרטגיה חכמה הוא בהקטנת הסיכון, לא בהגדלת הרווח.
+    <div class="banner" style="margin-top:1em;max-width:80%">
+      המסקנה הכנה: בשוק עולה, "פשוט להחזיק" ניצח בתשואה. הערך של אסטרטגיה חכמה
+      הוא בדרך: MA150 הגיעה כמעט לאותו סכום עם חצי מהטלטלה.
     </div>
-    <p style="font-size:.68em;color:var(--muted);margin-top:.8em">סימולציה על נתוני Binance אמיתיים, ינואר 2023 עד היום, ללא עמלות. תוצאות עבר אינן מבטיחות דבר.</p>
+    <p style="font-size:.66em;color:var(--muted);margin-top:.7em">סימולציה על נתוני Binance אמיתיים, ללא עמלות. תוצאות עבר אינן מבטיחות דבר.</p>
   </section>
 
   <!-- פולימרקט ומסקנות -->
