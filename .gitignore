@@ -8,5 +8,5 @@ coverage/
 !.env.example
 
 # Local-only design/MVP docs (keep on disk, not in git)
-AI-MarketPulse-Design-Doc.docx
-AI-MarketPulse-MVP.docx
+*.docx
+*.pdf
