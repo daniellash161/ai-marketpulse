@@ -206,7 +206,7 @@
       </div>
       <div style="flex:1;text-align:right">
         <div class="step"><b>נתוני אמת בלבד</b><span>Binance מ-2020 (כ-2,400 ימים), מדד פחד/חמדנות, ספר פקודות Polymarket חי.</span></div>
-        <div class="step"><b>אנסמבל 4 מודלים</b><span>Prophet, ARIMA, XGBoost, LSTM עם שקלול נלמד.</span></div>
+        <div class="step"><b>אנסמבל 4 מודלים</b><span>מודלים בסגנון Prophet, ARIMA, Gradient Boosting ו-RNN, עם שקלול נלמד.</span></div>
         <div class="step"><b>הסבר לכל מספר</b><span>כל רכיב בדשבורד מלווה בהסבר בעברית ובמגבלותיו.</span></div>
       </div>
     </div>
@@ -227,10 +227,10 @@
   <section class="slide">
     <h2>ארבעה מודלים, שכבת שילוב אחת חכמה.</h2>
     <div class="cols" style="max-width:92%">
-      <div class="glass card"><h3 class="accent">Prophet</h3><ul><li>מגמה + עונתיות שבועית.</li></ul></div>
+      <div class="glass card"><h3 class="accent">בסגנון Prophet</h3><ul><li>מודל אדיטיבי: מגמה + עונתיות שבועית.</li></ul></div>
       <div class="glass card"><h3 class="accent">ARIMA</h3><ul><li>מודל אוטורגרסיבי על תשואות.</li></ul></div>
-      <div class="glass card"><h3 class="accent">XGBoost</h3><ul><li>עצי החלטה מועצמים על 5 מאפיינים.</li></ul></div>
-      <div class="glass card"><h3 class="accent">LSTM</h3><ul><li>רשת חוזרת הלומדת רצפים.</li></ul></div>
+      <div class="glass card"><h3 class="accent">בסגנון XGBoost</h3><ul><li>Gradient Boosting: עצים בעומק 1 על 5 מאפיינים.</li></ul></div>
+      <div class="glass card"><h3 class="accent">RNN (Elman)</h3><ul><li>רשת חוזרת הלומדת רצפים.</li></ul></div>
     </div>
     <div class="glass glow card" style="margin-top:1.3em;max-width:80%;text-align:right">
       <h3>מה בדיוק לומד ה-SGD? את משקלי האנסמבל.</h3>
@@ -270,19 +270,19 @@
     <h2>אופטימיזציית היפרפרמטרים: לא ניחוש, חיפוש.</h2>
     <div class="cols" style="max-width:88%">
       <div class="glass glow card">
-        <h3 class="accent">XGBoost · Grid Search</h3>
+        <h3 class="accent">Gradient Boosting (בסגנון XGBoost) · Grid Search</h3>
         <div class="tune-row"><span>מה נבדק</span><span class="mono">rounds: 15 / 25 / 40 × lr: 0.1 / 0.2 / 0.3</span></div>
         <div class="tune-row"><span>מה נבחר</span><span class="mono" style="color:var(--gold2);font-weight:700">rounds = 15, lr = 0.1</span></div>
-        <div class="tune-row"><span>תוצאת ולידציה</span><span class="mono">Brier 0.252 · Acc 51.3%</span></div>
+        <div class="tune-row"><span>תוצאת ולידציה</span><span class="mono">Brier 0.2517 · Acc 51.6%</span></div>
       </div>
       <div class="glass glow card">
         <h3 class="accent">ARIMA · בחירת חלון</h3>
         <div class="tune-row"><span>מה נבדק</span><span class="mono">window: 60 / 100 / 150</span></div>
         <div class="tune-row"><span>מה נבחר</span><span class="mono" style="color:var(--gold2);font-weight:700">window = 150</span></div>
-        <div class="tune-row"><span>תוצאת ולידציה</span><span class="mono">Acc 52.5%</span></div>
+        <div class="tune-row"><span>תוצאת ולידציה</span><span class="mono">Acc 52.7% (נבחר לפי דיוק)</span></div>
       </div>
     </div>
-    <p style="font-size:.8em;color:var(--muted);margin-top:.9em">Prophet ו-LSTM: פרמטרים קבועים מתועדים; הכוונון שלהם הוגדר כעבודת המשך.</p>
+    <p style="font-size:.8em;color:var(--muted);margin-top:.9em">Prophet-style ו-RNN: פרמטרים קבועים מתועדים; הכוונון שלהם הוגדר כעבודת המשך. זו אופטימיזציה ממוקדת, לא כוונון של כל המודלים.</p>
     <div class="banner" style="margin-top:.9em;max-width:80%">
       ממצא כן: החיפוש בחר דווקא בקונפיגורציה השמרנית ביותר.
       אין בנתונים אות חזק שמצדיק מודל אגרסיבי, וזה עקבי עם שאר הממצאים.
@@ -291,7 +291,7 @@
 
   <!-- 8. ברירת מאפיינים -->
   <section class="slide">
-    <h2>ברירת מאפיינים: נימוק לכל מאפיין ומבחן אבלציה.</h2>
+    <h2>בחירת המאפיינים (ידנית) וניתוח תרומתם באבלציה.</h2>
     <div class="cols" style="max-width:92%">
       <div class="glass card" style="flex:1.1">
         <h3>למה 5 המאפיינים האלה?</h3>
@@ -304,7 +304,7 @@
         </ul>
       </div>
       <div class="glass card" style="flex:1">
-        <h3>אבלציה (Leave-One-Out)</h3>
+        <h3>אבלציה: Leave One Feature Out</h3>
         <table style="font-size:.8em">
           <tr><th>הוסר</th><th>ΔBrier</th></tr>
           <tr><td>RSI (14)</td><td class="mono low">-0.0006</td></tr>
@@ -327,12 +327,12 @@
     <div style="max-width:82%">
       <table>
         <tr><th>מודל</th><th>יום 1</th><th>3 ימים</th><th>7 ימים</th><th>30 יום</th></tr>
-        <tr><td>LSTM</td><td class="low">48.6%</td><td class="mid">51.2%</td><td class="mid">51.2%</td><td class="good">53.9%</td></tr>
-        <tr><td>* XGBoost</td><td class="low">49.5%</td><td class="mid">52.5%</td><td class="mid">51.2%</td><td class="low">46.5%</td></tr>
-        <tr><td>ARIMA</td><td class="low">49.9%</td><td class="good">53.4%</td><td class="mid">50.1%</td><td class="low">49.5%</td></tr>
-        <tr><td>* Prophet</td><td class="low">49.5%</td><td class="mid">52.5%</td><td class="mid">51.2%</td><td class="low">46.5%</td></tr>
+        <tr><td>RNN (Elman)</td><td class="low">48.6%</td><td class="mid">51.4%</td><td class="mid">51.4%</td><td class="good">53.9%</td></tr>
+        <tr><td>* Gradient Boosting</td><td class="low">49.5%</td><td class="mid">52.7%</td><td class="mid">51.4%</td><td class="low">46.5%</td></tr>
+        <tr><td>ARIMA(2,1,0)</td><td class="mid">50.5%</td><td class="good">54.7%</td><td class="mid">51.0%</td><td class="low">49.1%</td></tr>
+        <tr><td>* Prophet-style</td><td class="low">49.5%</td><td class="mid">52.7%</td><td class="mid">51.4%</td><td class="low">46.5%</td></tr>
         <tr style="background:rgba(255,255,255,.04)"><td class="dim">בסיס: "תמיד עלייה"</td>
-          <td class="dim">49.5%</td><td class="dim">52.5%</td><td class="dim">51.2%</td><td class="dim">46.5%</td></tr>
+          <td class="dim">49.5%</td><td class="dim">52.7%</td><td class="dim">51.4%</td><td class="dim">46.5%</td></tr>
       </table>
       <p style="font-size:.72em;color:var(--muted);margin-top:.7em;text-align:right">
         * חזה "עלייה" בכל תקופת הבדיקה, ולכן שווה לבסיס. סט בדיקה: 479 ימים, 434 עד 463 דגימות לאופק.
@@ -340,7 +340,7 @@
       </p>
     </div>
     <div class="banner" style="margin-top:.9em;max-width:80%">
-      עקיפות קטנות בלבד: ARIMA ל-3 ימים ו-LSTM ל-30 יום. השאר על הבסיס או מתחתיו.
+      עקיפות קטנות בלבד: ARIMA ל-3 ימים (54.7% מול 52.7%) ו-RNN ל-30 יום. רק Gradient Boosting אומן מחדש לכל אופק; לשאר נבחן האות של 7 הימים. התצפיות חופפות, ולכן ללא מרווחי סמך אין להסיק יציבות.
       חיזוי כיווני קצר-טווח קרוב להטלת מטבע, וזו התשובה הכנה.
     </div>
   </section>
@@ -399,8 +399,8 @@
       <div class="glass card">
         <h3>השוואה ל-Polymarket</h3>
         <ul>
-          <li><b>בזמן אמת</b>: הסתברות המודל מול ההסתברות המרומזת מספר פקודות CLOB אמיתי, כולל כרטיס פער ארביטראז'.</li>
-          <li><b>מגבלה מוצהרת</b>: המאפיין ההיסטורי הוא פרוקסי (אין היסטוריית Polymarket מלאה מ-2020); איסוף אמיתי הוגדר כעבודת המשך.</li>
+          <li><b>בזמן אמת</b>: הסתברות המודל מול ההסתברות המרומזת מספר פקודות CLOB אמיתי, ככרטיס פער הסתברויות (השוק אינו בהכרח על אותו אירוע ואופק, ולכן אין זה ארביטראז').</li>
+          <li><b>מגבלה מוצהרת</b>: המאפיין ההיסטורי הוא פרוקסי (אין היסטוריית Polymarket מלאה מ-2020), ולכן עדיין לא ניתן לקבוע כמותית אם המודל עדיף על חוכמת ההמונים; איסוף תצפיות אמיתיות עם התאמת אירוע ואופק הוגדר כעבודת המשך.</li>
         </ul>
       </div>
       <div class="glass glow card">
@@ -424,7 +424,7 @@
         <ul>
           <li>לחזות שוק זה קשה, והתוצאות עדיין לא הוכחו כמובהקות סטטיסטית.</li>
           <li>נתוני העבר של פולימרקט הם קירוב מחושב, לא נתונים מקוריים.</li>
-          <li>שניים מהמודלים (Prophet ו-LSTM) עוד לא עברו כוונון.</li>
+          <li>שניים מהמודלים (Prophet-style ו-RNN) עוד לא עברו כוונון.</li>
         </ul>
       </div>
       <div class="glass glow card">
