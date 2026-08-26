@@ -545,7 +545,7 @@ export default function ModelComparison({ data, loading, onOptimize }: ModelComp
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
               <h3 className="text-md font-bold text-white mb-2 font-sans flex items-center gap-2">
                 <Scale className="w-5 h-5 text-amber-500" />
-                ברירת מאפיינים: ניתוח אבלציה (Leave-One-Out)
+                בחירת המאפיינים וניתוח תרומתם (Leave One Feature Out)
                 <InfoTip text="המודל אומן מחדש כאשר בכל פעם הוסר מאפיין אחד, ונמדדה הפגיעה בציון Brier על סט הולידציה. דלתא חיובית = המאפיין תורם; קרוב לאפס = תרומה שולית. תרומות שוליות הן ממצא כן, עקבי עם הקושי הכללי בחיזוי." />
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed mb-2 font-sans">
