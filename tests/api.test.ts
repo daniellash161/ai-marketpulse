@@ -14,7 +14,7 @@ test('serverless API reports upstream failure and recovers on retry', async () =
   globalThis.fetch = async (input, init) => {
     const url = String(input);
     if (url.startsWith('http://127.0.0.1:')) return realFetch(input, init);
-    if (url.includes('api.binance.com')) {
+    if (url.includes('data-api.binance.vision')) {
       return providerAvailable ? Response.json(candles) : new Response('', { status: 503 });
     }
     if (url.includes('api.alternative.me')) return Response.json({ data: [] });
