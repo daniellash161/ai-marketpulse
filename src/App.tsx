@@ -68,7 +68,7 @@ export default function App() {
           <h3 className="text-lg font-bold text-white mb-1 font-sans">שגיאה בטעינת הנתונים</h3>
           <p className="text-sm text-slate-400 mb-5 font-sans max-w-md">{error}</p>
           <button
-            onClick={fetchMarketStatus}
+            onClick={() => fetchMarketStatus()}
             className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer font-sans"
           >
             <RefreshCw className="w-3.5 h-3.5" />

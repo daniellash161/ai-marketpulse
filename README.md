@@ -95,7 +95,9 @@ npm run lint
 
 ## Project Structure
 
-- `server.ts`: data retrieval, indicators, modeling, evaluation, simulations, and API routes.
+- `app.ts`: data retrieval, indicators, modeling, evaluation, simulations, and API routes.
+- `server.ts`: local development and standalone production server.
+- `api/index.ts`: Vercel function entry point for the Express API.
 - `src/App.tsx`: application layout and navigation.
 - `src/components/`: market dashboard, model comparison, forecast charts, and backtesting interface.
 - `src/types.ts`: shared data structures.
@@ -106,3 +108,9 @@ npm run lint
 AI MarketPulse was submitted as a team academic project. Daniella Shemesh developed most of the application.
 
 The project is retained as a learning prototype demonstrating data integration, custom modeling implementations, evaluation experiments, and visualization. Further development is not currently planned.
+
+## Deploy on Vercel
+
+The frontend and API must be deployed together. `vercel.json` builds the Vite frontend into `dist` and routes `/api/*` to the Express function in `api/index.ts`. Deploying only `dist` leaves the dashboard without its market-data API.
+
+The API requires outbound access to Binance, alternative.me, and Polymarket. The function has a 60-second duration limit; verify `/api/market-status` returns JSON after deployment. A successful frontend build alone does not verify data availability. No provider credentials are required for these public endpoints.
