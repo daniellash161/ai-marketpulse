@@ -38,9 +38,9 @@ async function fetchBinanceDailyCandles(): Promise<{ date: string; close: number
   let startTime = HISTORY_START;
   const now = Date.now();
   for (let page = 0; page < 12 && startTime < now; page++) {
-    const url = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=${startTime}&limit=1000`;
+    const url = `https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=${startTime}&limit=1000`;
     const res = await fetch(url, FETCH_HEADERS);
-    if (!res.ok) break;
+    if (!res.ok) throw new Error(`Binance market data request failed: HTTP ${res.status}`);
     const klines: any[] = await res.json();
     if (!Array.isArray(klines) || klines.length === 0) break;
     for (const k of klines) {
